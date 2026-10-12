@@ -75,7 +75,8 @@ export function drawCard(ctx, x, y, w, deck, card, rot = 0) {
   ctx.font = `600 ${5.2 * u}px ${DISPLAY}`;
   spaced(ctx, 0.05, 5.2 * u);
   ctx.textAlign = "left";
-  wrap(ctx, d.label.toUpperCase(), 42 * u).forEach((ln, i) => ctx.fillText(ln, pad, pad + 5.2 * u * (1 + i * 1.25)));
+  const tag = card.real ? "" : card.mine ? " \u2726" : " \u00b7 SAMPLE";
+  wrap(ctx, d.label.toUpperCase() + tag, 42 * u).forEach((ln, i) => ctx.fillText(ln, pad, pad + 5.2 * u * (1 + i * 1.25)));
   ctx.globalAlpha = 1;
 
   // title block, centred

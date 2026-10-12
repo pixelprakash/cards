@@ -1,11 +1,11 @@
 // Pedagogy Playcards: deal a hand, mirror it on the drafting template, reveal the quote on scroll.
-// Only the four cards printed on the box are real; the rest are illustrative examples.
+// Only the four cards printed on the box are real (flagged `real`); every other card is an illustrative sample.
 
 const DECKS = {
   action: {
     label: "Action Word", code: "A",
     cards: [
-      { t: "Apply", say: "apply" },
+      { t: "Apply", say: "apply", real: true },
       { t: "Remix", say: "remix" },
       { t: "Unlearn", say: "unlearn" },
       { t: "Gather", say: "gather around" },
@@ -19,7 +19,7 @@ const DECKS = {
   value: {
     label: "Value Card", code: "V", glyph: "g-v",
     cards: [
-      { t: "Lifelong Learning", say: "lifelong learning", d: "Continuous search of knowledge and personal development beyond formal education. A commitment to ongoing learning." },
+      { t: "Lifelong Learning", say: "lifelong learning", real: true, d: "Continuous search of knowledge and personal development beyond formal education; a commitment to ongoing learning." },
       { t: "Care", say: "care", d: "Attention to the wellbeing of others as the basis for how learning is organised." },
       { t: "Curiosity", say: "curiosity", d: "Following questions for their own sake, before anyone asks for an answer." },
       { t: "Equity", say: "fairness", d: "Access to learning that does not depend on where, or to whom, you were born." },
@@ -31,7 +31,7 @@ const DECKS = {
   mode: {
     label: "Mode & Methods Card", code: "M", glyph: "g-m",
     cards: [
-      { t: "Flipped Classroom", say: "a flipped classroom", d: "Reverses the traditional teaching model: students meet the material beforehand and use class time for discussion and problem-solving." },
+      { t: "Flipped Classroom", say: "a flipped classroom", real: true, d: "Reverses the traditional teaching model, where students engage with learning materials beforehand and use classroom time for active discussions and problem-solving" },
       { t: "Peer Circle", say: "peer circles", d: "Learners teach and question one another with no lecturer at the centre." },
       { t: "Apprenticeship", say: "apprenticeship", d: "Learning a practice by working beside someone who already does it." },
       { t: "Field Expedition", say: "field expeditions", d: "Leaving the classroom to study a place or problem where it actually lives." },
@@ -42,7 +42,7 @@ const DECKS = {
   place: {
     label: "Places & Spaces Card", code: "P&S", glyph: "g-p",
     cards: [
-      { t: "Artisanal Marketplace", say: "an artisanal marketplace", d: "Where locally crafted products are sold, often by independent artisans or small businesses." },
+      { t: "Artisanal Marketplace", say: "an artisanal marketplace", real: true, d: "Where locally crafted products are sold, often by independent artisans or small businesses." },
       { t: "Public Library", say: "a public library", d: "A shared civic space for borrowing knowledge, open to anyone who walks in." },
       { t: "Railway Platform", say: "a railway platform", d: "A place of waiting, crossing and chance meetings between strangers." },
       { t: "Community Kitchen", say: "a community kitchen", d: "A space where food is made for many hands and many mouths." },
@@ -119,6 +119,7 @@ function flip(deck, delay = 0, forceIndex) {
     const card = DECKS[deck].cards[state[deck]];
     front.innerHTML = cardInner(deck, card);
     front.classList.toggle("mine", !!card.mine);
+    front.classList.toggle("sample", !card.real && !card.mine);
     syncDeck(deck);
   };
   if (reduceMotion) return swap();
@@ -281,7 +282,7 @@ if (form) {
     try {
       const { t, d } = current();
       const { makeCardPng } = await import("./share.js");
-      const blob = await makeCardPng(deckVal(), { t, d });
+      const blob = await makeCardPng(deckVal(), { t, d, mine: true });
       await deliver(blob, `playcard-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, t);
     } catch { toast("Couldn’t build the image"); }
     btn.disabled = false;

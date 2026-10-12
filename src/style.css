@@ -216,6 +216,7 @@ h2, h3 { font-family: var(--display); text-wrap: balance; }
 }
 .slot.live .front::after, .make-card.live .preview::after { opacity: 1; }
 .front.mine .k::after { content: " ✦"; }
+.card.sample .k::after { content: " · sample"; }
 .slot.held .front { outline: 3px solid var(--ink); outline-offset: 4px; }
 
 /* card back: ink stock, deck-colour star and corner codes */
