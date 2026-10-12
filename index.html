@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pedagogy Playcards</title>
   <meta name="description" content="A card-based speculative design toolkit for reimagining the future of learning. A collective form of crafting social fictions." />
   <meta name="theme-color" content="#ffffff" />
@@ -19,9 +19,8 @@
   <meta name="twitter:description" content="A card-based toolkit for reimagining the future of learning." />
   <meta name="twitter:image" content="/og.jpg" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet" />
+  <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/newsreader-latin-italic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/src/style.css" />
   <script>document.documentElement.classList.add("js");setTimeout(function(){document.documentElement.classList.add("ready")},2500)</script>
 </head>
@@ -40,7 +39,8 @@
 
 <header class="bar">
   <a class="logo" href="#top" aria-label="Pedagogy Playcards, back to top"><svg aria-hidden="true"><use href="#star"/></svg></a>
-  <nav aria-label="Primary">
+  <button class="menu" type="button" aria-expanded="false" aria-controls="nav"><i aria-hidden="true"></i><span data-menu-label>Menu</span></button>
+  <nav id="nav" aria-label="Primary">
     <a href="#decks">The decks</a>
     <a href="#method" class="hide-sm">Method</a>
     <a href="#make" class="hide-sm">Make a card</a>
@@ -106,15 +106,15 @@
           </div>
           </div>
         </div>
-        <p class="hint">Click a card to flip it. Pin the ones you like. Press <kbd>D</kbd> to deal.</p>
+        <p class="hint"><span class="hint-touch">Tap a card to flip it. Use the lock to hold the ones you like.</span><span class="hint-key">Click a card to flip it. Pin the ones you like. Press <kbd>D</kbd> to deal.</span></p>
 
         <div class="draft">
           <p class="draft-label">Your draft scenario <span class="hand" data-hand>· hand 1</span></p>
           <p class="scenario" aria-live="polite">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
           <div class="draft-row">
             <button class="btn" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
-            <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg>Copy</button>
-            <button class="btn btn-ghost" type="button" data-save><svg aria-hidden="true"><use href="#img"/></svg>Save image</button>
+            <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg><span class="lbl">Copy</span></button>
+            <button class="btn btn-ghost" type="button" data-save><svg aria-hidden="true"><use href="#img"/></svg><span class="lbl">Save image</span></button>
           </div>
         </div>
       </div>
@@ -340,14 +340,20 @@
 <!-- ============ THE BOX ============ -->
 <section class="object" id="box">
   <figure class="shot shot-a">
-    <img src="/img/box-standing.jpg" width="2200" height="1238" alt="The Pedagogy Playcards box standing on a wooden table. Its face shows the title lockup and four sample cards: Apply, Artisanal Marketplace, Lifelong Learning and Flipped Classroom." />
+    <picture>
+      <source type="image/webp" srcset="/img/box-standing-640.webp 640w, /img/box-standing-1100.webp 1100w, /img/box-standing-1600.webp 1600w, /img/box-standing-2200.webp 2200w" sizes="100vw" />
+      <img src="/img/box-standing.jpg" width="2200" height="1238" alt="The Pedagogy Playcards box standing on a wooden table. Its face shows the title lockup and four sample cards: Apply, Artisanal Marketplace, Lifelong Learning and Flipped Classroom." decoding="async" loading="lazy" />
+    </picture>
     <figcaption>
       <h2>A collective form of crafting social fictions.</h2>
       <p>Four decks, prompts, a drafting template and an optional Thing of the Future, in one box.</p>
     </figcaption>
   </figure>
   <figure class="shot shot-b">
-    <img src="/img/box-flat.jpg" width="2200" height="1238" alt="The Pedagogy Playcards box lying flat, showing the lid with the four deck colours: yellow Action Word, brick Places and Spaces, sky Value, violet Modes and Methods." loading="lazy" />
+    <picture>
+      <source type="image/webp" srcset="/img/box-flat-640.webp 640w, /img/box-flat-1100.webp 1100w, /img/box-flat-1600.webp 1600w, /img/box-flat-2200.webp 2200w" sizes="100vw" />
+      <img src="/img/box-flat.jpg" width="2200" height="1238" alt="The Pedagogy Playcards box lying flat, showing the lid with the four deck colours: yellow Action Word, brick Places and Spaces, sky Value, violet Modes and Methods." decoding="async" loading="lazy" />
+    </picture>
     <figcaption><p>Yellow, brick, sky and violet: one colour for each deck.</p></figcaption>
   </figure>
 </section>
@@ -375,6 +381,7 @@
 </section>
 
 </main>
+<button class="dock" type="button" data-deal aria-label="Deal a new hand"><svg aria-hidden="true"><use href="#redo"/></svg></button>
 <p class="toast" role="status" aria-live="polite"></p>
 
 <script type="module" src="/src/site.js"></script>

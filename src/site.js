@@ -1,5 +1,3 @@
-import { makePoster, makeCardPng } from "./share.js";
-
 // Pedagogy Playcards: deal a hand, mirror it on the drafting template, reveal the quote on scroll.
 // Only the four cards printed on the box are real; the rest are illustrative examples.
 
@@ -226,6 +224,7 @@ $("[data-save]")?.addEventListener("click", async (e) => {
   try {
     const parts = [...$(".draft .scenario").childNodes].map((n) => ({ t: n.textContent, deck: n.dataset?.say }));
     const picks = Object.fromEntries(ORDER.map((d) => [d, DECKS[d].cards[state[d]]]));
+    const { makePoster } = await import("./share.js");
     const blob = await makePoster(parts, picks, hand);
     await deliver(blob, `pedagogy-playcards-hand-${hand}.png`, "My draft scenario");
   } catch { toast("Couldn’t build the image"); }
@@ -281,11 +280,38 @@ if (form) {
     btn.disabled = true;
     try {
       const { t, d } = current();
+      const { makeCardPng } = await import("./share.js");
       const blob = await makeCardPng(deckVal(), { t, d });
       await deliver(blob, `playcard-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, t);
     } catch { toast("Couldn’t build the image"); }
     btn.disabled = false;
   });
+}
+
+
+// ---- phone menu: full-screen sheet ----
+const bar = $(".bar");
+const menuBtn = $(".menu");
+if (bar && menuBtn) {
+  const setMenu = (open) => {
+    bar.classList.toggle("open", open);
+    menuBtn.setAttribute("aria-expanded", String(open));
+    $("[data-menu-label]").textContent = open ? "Close" : "Menu";
+    document.documentElement.style.overflow = open ? "hidden" : "";
+  };
+  menuBtn.addEventListener("click", () => setMenu(!bar.classList.contains("open")));
+  $$("#nav a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
+  addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
+  matchMedia("(min-width: 62rem)").addEventListener("change", (e) => e.matches && setMenu(false));
+}
+
+// ---- floating deal button: visible while the hero is on screen and its own button is not ----
+const dock = $(".dock");
+if (dock && "IntersectionObserver" in window) {
+  let heroIn = true, rowIn = true;
+  const sync = () => dock.classList.toggle("show", heroIn && !rowIn);
+  new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; sync(); }).observe($(".hero"));
+  new IntersectionObserver(([e]) => { rowIn = e.isIntersecting; sync(); }, { rootMargin: "0px 0px -10% 0px" }).observe($(".draft-row"));
 }
 
 // ---- opening: a face-down pile fans out to the table and turns over, card by card ----
