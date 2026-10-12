@@ -3,28 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Pedagogy Playcards</title>
-  <meta name="description" content="A card-based speculative design toolkit for reimagining the future of learning. A collective form of crafting social fictions." />
+  <title>Pedagogy Playcards: a toolkit for reimagining learning</title>
+  <meta name="description" content="A card-based speculative design toolkit for reimagining the future of learning. Combine places, values, actions and modes to craft social fictions." />
+  <meta name="author" content="Deepak John Mathew, Salil Sahadevan" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta name="theme-color" content="#ffffff" />
+  <link rel="canonical" href="%SITE_URL%/" data-abs />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en" />
   <meta property="og:site_name" content="Pedagogy Playcards" />
-  <meta property="og:title" content="Pedagogy Playcards" />
+  <meta property="og:title" content="Pedagogy Playcards: a toolkit for reimagining learning" />
   <meta property="og:description" content="Deal a hand of places, values, actions and modes, and draft a social fiction about the future of learning." />
-  <meta property="og:image" content="/og.jpg" />
+  <meta property="og:url" content="%SITE_URL%/" data-abs />
+  <meta property="og:image" content="%SITE_URL%/og.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="The Pedagogy Playcards box with four sample cards." />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Pedagogy Playcards" />
+  <meta name="twitter:title" content="Pedagogy Playcards: a toolkit for reimagining learning" />
   <meta name="twitter:description" content="A card-based toolkit for reimagining the future of learning." />
-  <meta name="twitter:image" content="/og.jpg" />
+  <meta name="twitter:image" content="%SITE_URL%/og.jpg" />
+  <meta name="twitter:image:alt" content="The Pedagogy Playcards box with four sample cards." />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
   <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/newsreader-latin-italic.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/src/style.css" />
   <script>document.documentElement.classList.add("js");setTimeout(function(){document.documentElement.classList.add("ready")},2500)</script>
 </head>
 <body id="top">
+<a class="skip" href="#main">Skip to content</a>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="star" viewBox="0 0 24 24"><path d="M12 0c.9 6.2 5.8 11.1 12 12-6.2.9-11.1 5.8-12 12-.9-6.2-5.8-11.1-12-12C6.2 11.1 11.1 6.2 12 0z"/></symbol>
@@ -49,7 +59,7 @@
   </nav>
 </header>
 
-<main>
+<main id="main" tabindex="-1">
 
 <!-- ============ HERO / the first hand ============ -->
 <section class="hero" aria-labelledby="title">
@@ -61,7 +71,7 @@
 
     <div class="hero-grid">
       <div class="lockup">
-        <h1 id="title" class="mark" aria-label="Pedagogy Playcards">
+        <h1 id="title" class="mark"><span class="vh">Pedagogy Playcards</span>
           <span class="ln" aria-hidden="true"><span>Peda</span></span>
           <span class="ln" aria-hidden="true"><span>gogy</span></span>
         </h1>
@@ -106,11 +116,11 @@
           </div>
           </div>
         </div>
-        <p class="hint"><span class="hint-touch">A demo draw with sample cards. Tap a card to flip it; lock the ones you like.</span><span class="hint-key">A demo draw with sample cards. Click a card to flip it, pin the ones you like, press <kbd>D</kbd> to deal.</span></p>
+        <p class="hint"><span class="hint-touch">A demo draw with sample cards. Tap a card to flip it; lock the ones you like.</span><span class="hint-key">A demo draw with sample cards. Click a card to flip it, pin the ones you like, press <kbd>Shift</kbd> + <kbd>D</kbd> to deal.</span></p>
 
         <div class="draft">
           <p class="draft-label">Your draft scenario <span class="hand" data-hand>· hand 1</span></p>
-          <p class="scenario" aria-live="polite">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
+          <p class="scenario">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
           <div class="draft-row">
             <button class="btn" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
             <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg><span class="lbl">Copy</span></button>
@@ -138,9 +148,18 @@
     <div class="premise-cols">
       <h2>Design as inquiry</h2>
       <div class="prose">
-        <p>Pedagogy Playcards is a card-based speculative tool for exploring alternative futures in higher education. With global challenges accelerating, there is a critical need to re/imagine learning frameworks that move beyond incremental reform. The tool works as a mechanism to generate futures, and a future requires what does not yet exist.</p>
-        <p>By assembling combinations of places, values, actions and modes, supported by prompts, participants construct possibility spaces where the educational status quo can be questioned and reconfigured. Design becomes inquiry: imagining alternative futures is a method for critical reflection and narrative construction, not a thought exercise.</p>
-        <p>Games function as social systems, representing reality and constructing social structures at the same time. The concept draws on Johan Huizinga’s <em>Homo Ludens</em> (1938), which frames humans as inherently playful beings.</p>
+        <div class="block">
+          <h3>A tool for generating futures</h3>
+          <p>Pedagogy Playcards is a <strong>card-based speculative tool</strong> for exploring alternative futures in higher education. With global challenges accelerating, there is a critical need to re/imagine learning frameworks that move beyond incremental reform. The tool works as a mechanism to generate futures, and a future requires what does not yet exist.</p>
+        </div>
+        <div class="block">
+          <h3>Possibility spaces</h3>
+          <p>By assembling combinations of places, values, actions and modes, supported by prompts, participants construct <strong>possibility spaces</strong> where the educational status quo can be questioned and reconfigured. Design becomes inquiry: imagining alternative futures is a method for critical reflection and narrative construction, not a thought exercise.</p>
+        </div>
+        <div class="block">
+          <h3>Play as a social system</h3>
+          <p>Games function as <strong>social systems</strong>, representing reality and constructing social structures at the same time. The concept draws on Johan Huizinga’s <em>Homo Ludens</em> (1938), which frames humans as inherently playful beings.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -238,12 +257,12 @@
   <div class="method-in">
     <div class="method-copy">
       <h2>Combine on the drafting template.</h2>
-      <p>By combining the elements on a drafting template, participants generate draft narratives that explore alternative futures. Prompts turn the combination into a concise, vivid description of a future learning environment.</p>
-      <p>The outcome is a draft scenario, expected to act as a precursor to scenario building. Card play operates at the intersection of freedom and order: moments of spontaneity coexist with an underlying structure, and implicit rules guide play.</p>
+      <p>By combining the elements on a drafting template, participants generate <strong>draft narratives</strong> that explore alternative futures. Prompts turn the combination into a concise, vivid description of a future learning environment.</p>
+      <p>The outcome is a <strong>draft scenario</strong>, expected to act as a precursor to scenario building. Card play operates at the <strong>intersection of freedom and order</strong>: moments of spontaneity coexist with an underlying structure, and implicit rules guide play.</p>
       <button class="btn btn-ghost" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
     </div>
 
-    <div class="template" aria-label="Drafting template, filled with your current hand">
+    <div class="template" role="group" aria-label="Drafting template, filled with your current hand">
       <div class="tpl-head"><span>Draft scenario</span><svg aria-hidden="true"><use href="#star"/></svg></div>
       <div class="tpl-slots">
         <div class="tpl-slot" data-deck="action"><small>Action</small><b data-name="action">Apply</b></div>
@@ -267,7 +286,7 @@
       <h2>Your turn: <em>make a card.</em></h2>
       <p>Add a Value card for an emerging value, or invent a new, context-specific place. Write it and deal it straight into your hand.</p>
 
-      <form class="maker" id="maker" autocomplete="off">
+      <form class="maker" id="maker" autocomplete="off" novalidate>
         <fieldset class="seg">
           <legend>Which deck?</legend>
           <label><input type="radio" name="deck" value="value"><span data-deck="value">Value</span></label>
@@ -275,7 +294,8 @@
         </fieldset>
         <label class="field">
           <span>Title</span>
-          <input name="title" type="text" maxlength="28" value="Night Bazaar" required />
+          <input name="title" type="text" maxlength="28" value="Night Bazaar" required aria-required="true" aria-describedby="title-error" />
+          <p class="field-error" id="title-error" role="alert" hidden>Enter a title for your card.</p>
         </label>
         <label class="field" data-desc>
           <span>What it means <small><b data-count>0</b>/130</small></span>
@@ -302,8 +322,8 @@
 
     <div class="notes-cols">
       <div class="prose">
-        <p>Since that first session the game has been played in many situations, contexts and age groups, and the card numbers have changed several times. Despite its unstructured appearance it follows an internal logic.</p>
-        <p>Early drafts were often funny. Repeated iterations got more imaginative, and more meaningful. What the sessions taught: a suspension of disbelief is essential for participants to engage fully with speculative combinations and push the boundaries of what learning could become.</p>
+        <p>Since that first session the game has been played in many situations, contexts and age groups, and the <strong>card numbers have changed several times</strong>. Despite its unstructured appearance it follows an <strong>internal logic</strong>.</p>
+        <p>Early drafts were often funny. Repeated iterations got more imaginative, and more meaningful. What the sessions taught: a <strong>suspension of disbelief</strong> is essential for participants to engage fully with speculative combinations and push the boundaries of what learning could become.</p>
       </div>
       <div>
         <p class="list-label">Themes the exercise gave rise to, among others</p>
@@ -363,7 +383,12 @@
     <h2>How could we reimagine education <em>radically?</em></h2>
     <a class="btn btn-light" href="#draw" data-deal-top>Deal a hand and start</a>
   </div>
-  <footer class="foot">
+
+</section>
+
+</main>
+
+<footer class="site-foot"><div class="foot">
     <div>
       <p class="foot-h">Authors</p>
       <p>Prof. Deepak John Mathew, Professor<br>Salil Sahadevan, Research Scholar, Department of Design</p>
@@ -376,11 +401,10 @@
       <p class="foot-h">Note</p>
       <p>An ongoing work. Only the four cards printed on the box are real. Every other card here is an illustrative sample, and the random draw is a demo, not the rules of the game.</p>
     </div>
-  </footer>
-</section>
+  </div></footer>
 
-</main>
 <button class="dock" type="button" data-deal aria-label="Deal a new hand"><svg aria-hidden="true"><use href="#redo"/></svg></button>
+<p class="vh" id="sr" role="status" aria-live="polite"></p>
 <p class="toast" role="status" aria-live="polite"></p>
 
 <script type="module" src="/src/site.js"></script>

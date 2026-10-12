@@ -91,6 +91,14 @@ function cardInner(deck, card) {
 function esc(s) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 // Write the chosen card into the sentence, the template and the slot's label, then sweep the highlight.
+const announce = () => {
+  clearTimeout(announce.id);
+  announce.id = setTimeout(() => {
+    const sr = $("#sr");
+    if (sr) sr.textContent = `New hand: ${$(".draft .scenario").textContent.trim()}`;
+  }, 700);
+};
+
 function syncDeck(deck) {
   const card = DECKS[deck].cards[state[deck]];
   $$(`[data-say="${deck}"]`).forEach((el) => {
@@ -99,6 +107,7 @@ function syncDeck(deck) {
   });
   $$(`[data-name="${deck}"]`).forEach((el) => (el.textContent = card.t));
   $(".hit", slotOf(deck))?.setAttribute("aria-label", `${DECKS[deck].label}: ${card.t}. Flip for a new one.`);
+  announce();
 }
 
 function pick(deck) {
@@ -147,7 +156,7 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toast.id);
-  toast.id = setTimeout(() => t.classList.remove("show"), 2000);
+  toast.id = setTimeout(() => t.classList.remove("show"), 4500);
 }
 
 function dealAll() {
@@ -185,7 +194,8 @@ $$(".slot").forEach((slot) => {
   const lock = $(".lock", slot);
   lock.addEventListener("click", () => {
     const on = !held.has(deck);
-    on ? held.add(deck) : held.delete(deck);
+    if (on) held.add(deck);
+    else held.delete(deck);
     lock.setAttribute("aria-pressed", String(on));
     lock.setAttribute("aria-label", `${on ? "Release" : "Hold"} this ${deck} card`);
     slot.classList.toggle("held", on);
@@ -201,7 +211,7 @@ $("[data-copy]")?.addEventListener("click", async () => {
   catch { toast("Copy isn’t available here"); }
 });
 addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!e.shiftKey || e.key.toLowerCase() !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
   if (/^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable) return;
   dealAll();
 });
@@ -221,7 +231,8 @@ async function deliver(blob, name, shareTitle) {
 
 $("[data-save]")?.addEventListener("click", async (e) => {
   const btn = e.currentTarget;
-  btn.disabled = true;
+  if (btn.getAttribute("aria-busy")) return;
+  btn.setAttribute("aria-busy", "true");
   try {
     const parts = [...$(".draft .scenario").childNodes].map((n) => ({ t: n.textContent, deck: n.dataset?.say }));
     const picks = Object.fromEntries(ORDER.map((d) => [d, DECKS[d].cards[state[d]]]));
@@ -229,7 +240,7 @@ $("[data-save]")?.addEventListener("click", async (e) => {
     const blob = await makePoster(parts, picks, hand);
     await deliver(blob, `pedagogy-playcards-hand-${hand}.png`, "My draft scenario");
   } catch { toast("Couldn’t build the image"); }
-  btn.disabled = false;
+  btn.removeAttribute("aria-busy");
 });
 
 // ---- make a card ----
@@ -251,8 +262,16 @@ if (form) {
     wrap.dataset.deck = deck;
     preview.dataset.deck = deck;
     preview.innerHTML = cardInner(deck, current());
-    const ok = titleEl.value.trim().length > 0;
-    $$("button[type=submit], [data-download-card]", form).forEach((b) => (b.disabled = !ok));
+    if (titleEl.value.trim()) clearError();
+  };
+  const err = $("#title-error");
+  const clearError = () => { err.hidden = true; titleEl.removeAttribute("aria-invalid"); };
+  const needTitle = () => {
+    if (titleEl.value.trim()) return false;
+    err.hidden = false;
+    titleEl.setAttribute("aria-invalid", "true");
+    titleEl.focus();
+    return true;
   };
   form.addEventListener("input", render);
   tiltable(wrap, preview);
@@ -260,6 +279,7 @@ if (form) {
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (needTitle()) return;
     const deck = deckVal();
     const { t, d } = current();
     const idx = addToDeck(deck, t, d);
@@ -277,33 +297,62 @@ if (form) {
   });
 
   $("[data-download-card]", form).addEventListener("click", async (e) => {
+    if (needTitle()) return;
     const btn = e.currentTarget;
-    btn.disabled = true;
+    if (btn.getAttribute("aria-busy")) return;
+    btn.setAttribute("aria-busy", "true");
     try {
       const { t, d } = current();
       const { makeCardPng } = await import("./share.js");
       const blob = await makeCardPng(deckVal(), { t, d, mine: true });
       await deliver(blob, `playcard-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, t);
     } catch { toast("Couldn’t build the image"); }
-    btn.disabled = false;
+    btn.removeAttribute("aria-busy");
   });
 }
 
 
-// ---- phone menu: full-screen sheet ----
+// ---- phone menu: full-screen sheet; the page behind is inert while it is open ----
 const bar = $(".bar");
 const menuBtn = $(".menu");
 if (bar && menuBtn) {
-  const setMenu = (open) => {
+  const behind = [$("#main"), $(".dock"), $(".site-foot")].filter(Boolean);
+  const setMenu = (open, returnFocus = true) => {
     bar.classList.toggle("open", open);
     menuBtn.setAttribute("aria-expanded", String(open));
     $("[data-menu-label]").textContent = open ? "Close" : "Menu";
     document.documentElement.style.overflow = open ? "hidden" : "";
+    behind.forEach((el) => (el.inert = open));
+    if (open) $("#nav a")?.focus();
+    else if (returnFocus) menuBtn.focus();
   };
   menuBtn.addEventListener("click", () => setMenu(!bar.classList.contains("open")));
-  $$("#nav a").forEach((a) => a.addEventListener("click", () => setMenu(false)));
-  addEventListener("keydown", (e) => { if (e.key === "Escape") setMenu(false); });
-  matchMedia("(min-width: 62rem)").addEventListener("change", (e) => e.matches && setMenu(false));
+  $$("#nav a").forEach((a) => a.addEventListener("click", () => setMenu(false, false)));
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && bar.classList.contains("open")) setMenu(false); });
+  matchMedia("(min-width: 62rem)").addEventListener("change", (e) => e.matches && setMenu(false, false));
+}
+
+// ---- deck stack: only stack while every sheet's content fits; otherwise let the sheets flow ----
+const decksEl = $(".decks");
+if (decksEl) {
+  const sheets = $$(".sheet", decksEl);
+  const stackable = matchMedia("(min-width: 62rem) and (min-height: 46rem)");
+  const fit = () => {
+    if (!stackable.matches) return;
+    decksEl.classList.remove("flow");
+    // measure the real content, not the oversized decorative glyph that overflows on purpose
+    const clipped = sheets.some((s) => {
+      const bottom = s.getBoundingClientRect().bottom;
+      return [$(".copy", s), $(".fan", s)].some((el) => el && el.getBoundingClientRect().bottom > bottom - 4);
+    });
+    if (clipped) decksEl.classList.add("flow");
+  };
+  // Content growth (text-spacing overrides, font swap) re-checks until it has flipped to flow; a resize starts over.
+  const ro = new ResizeObserver(() => { if (!decksEl.classList.contains("flow")) fit(); });
+  sheets.forEach((s) => ro.observe($(".copy", s)));
+  addEventListener("resize", fit);
+  document.fonts?.ready.then(fit);
+  fit();
 }
 
 // ---- floating deal button: visible while the hero is on screen and its own button is not ----
