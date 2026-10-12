@@ -6,6 +6,18 @@
   <title>Pedagogy Playcards</title>
   <meta name="description" content="A card-based speculative design toolkit for reimagining the future of learning. A collective form of crafting social fictions." />
   <meta name="theme-color" content="#ffffff" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Pedagogy Playcards" />
+  <meta property="og:title" content="Pedagogy Playcards" />
+  <meta property="og:description" content="Deal a hand of places, values, actions and modes, and draft a social fiction about the future of learning." />
+  <meta property="og:image" content="/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The Pedagogy Playcards box with four sample cards." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pedagogy Playcards" />
+  <meta name="twitter:description" content="A card-based toolkit for reimagining the future of learning." />
+  <meta name="twitter:image" content="/og.jpg" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,6 +33,7 @@
   <symbol id="g-m" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.6-5.7M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.5 3v4h-4M6.5 21v-4h4"/></g></symbol>
   <symbol id="g-p" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9.5 21v-6h5v6"/></g></symbol>
   <symbol id="redo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></g></symbol>
+  <symbol id="img" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></g></symbol>
   <symbol id="lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
   <symbol id="copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></g></symbol>
 </svg>
@@ -30,6 +43,7 @@
   <nav aria-label="Primary">
     <a href="#decks">The decks</a>
     <a href="#method" class="hide-sm">Method</a>
+    <a href="#make" class="hide-sm">Make a card</a>
     <a href="#notes" class="hide-sm">Field notes</a>
     <a href="#box">The box</a>
   </nav>
@@ -100,6 +114,7 @@
           <div class="draft-row">
             <button class="btn" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
             <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg>Copy</button>
+            <button class="btn btn-ghost" type="button" data-save><svg aria-hidden="true"><use href="#img"/></svg>Save image</button>
           </div>
         </div>
       </div>
@@ -240,6 +255,43 @@
         <small>Prompt</small>
         <p class="scenario">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MAKE A CARD ============ -->
+<section class="make" id="make">
+  <div class="make-in">
+    <div class="make-copy">
+      <h2>Your turn: <em>make a card.</em></h2>
+      <p>The decks are open. If the value, method or place you need isn’t there, write it and deal it straight into your hand.</p>
+
+      <form class="maker" id="maker" autocomplete="off">
+        <fieldset class="seg">
+          <legend>Which deck?</legend>
+          <label><input type="radio" name="deck" value="value"><span data-deck="value">Value</span></label>
+          <label><input type="radio" name="deck" value="mode"><span data-deck="mode">Mode</span></label>
+          <label><input type="radio" name="deck" value="place" checked><span data-deck="place">Place</span></label>
+          <label><input type="radio" name="deck" value="action"><span data-deck="action">Action</span></label>
+        </fieldset>
+        <label class="field">
+          <span>Title</span>
+          <input name="title" type="text" maxlength="28" value="Night Bazaar" required />
+        </label>
+        <label class="field" data-desc>
+          <span>What it means <small><b data-count>0</b>/130</small></span>
+          <textarea name="desc" rows="3" maxlength="130">A market that opens after dark, where anyone can teach a stall’s worth of skill.</textarea>
+        </label>
+        <div class="make-actions">
+          <button class="btn btn-light" type="submit">Deal it into my hand</button>
+          <button class="btn btn-ghost-light" type="button" data-download-card><svg aria-hidden="true"><use href="#img"/></svg>Download card</button>
+        </div>
+        <p class="make-note">Your cards stay in this browser and join the shuffle next time you deal.</p>
+      </form>
+    </div>
+
+    <div class="make-card" data-deck="place">
+      <div class="card preview" id="preview" data-deck="place"></div>
     </div>
   </div>
 </section>

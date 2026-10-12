@@ -1,3 +1,5 @@
+import { makePoster, makeCardPng } from "./share.js";
+
 // Pedagogy Playcards: deal a hand, mirror it on the drafting template, reveal the quote on scroll.
 // Only the four cards printed on the box are real; the rest are illustrative examples.
 
@@ -63,12 +65,32 @@ const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const slotOf = (deck) => $(`.slot[data-slot="${deck}"]`);
 
+// ---- cards made by visitors persist in this browser ----
+const STORE = "pp.cards";
+const mine = (() => { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } })();
+const saveMine = () => { try { localStorage.setItem(STORE, JSON.stringify(mine)); } catch { /* storage blocked: cards last for this visit only */ } };
+
+function phraseFor(deck, title) {
+  const t = title.trim().toLowerCase();
+  if (deck === "mode" || deck === "place") return /^(a|an|the)\s/.test(t) ? t : `the ${t}`;
+  return t;
+}
+function addToDeck(deck, title, desc) {
+  const cards = DECKS[deck].cards;
+  const found = cards.findIndex((c) => c.t.toLowerCase() === title.trim().toLowerCase());
+  if (found >= 0) { cards[found].d = deck === "action" ? undefined : desc; return found; }
+  cards.push({ t: title.trim(), say: phraseFor(deck, title), d: deck === "action" ? undefined : desc, mine: true });
+  return cards.length - 1;
+}
+mine.forEach((m) => addToDeck(m.deck, m.t, m.d));
+
 function cardInner(deck, card) {
   const d = DECKS[deck];
   const glyph = d.glyph ? `<svg class="g" aria-hidden="true"><use href="#${d.glyph}"/></svg>` : "";
-  const desc = card.d ? `<p class="d">${card.d}</p>` : "";
-  return `<div class="in"><span class="k">${d.label}</span><div class="mid">${glyph}<span class="t">${card.t}</span>${desc}</div><span class="c">${d.code}</span></div>`;
+  const desc = card.d ? `<p class="d">${esc(card.d)}</p>` : "";
+  return `<div class="in"><span class="k">${d.label}</span><div class="mid">${glyph}<span class="t">${esc(card.t)}</span>${desc}</div><span class="c">${d.code}</span></div>`;
 }
+function esc(s) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
 // Write the chosen card into the sentence, the template and the slot's label, then sweep the highlight.
 function syncDeck(deck) {
@@ -89,13 +111,18 @@ function pick(deck) {
 }
 
 // A full 360° spin that lifts toward the viewer; the new face is swapped in while the back is showing.
-function flip(deck, delay = 0) {
+function flip(deck, delay = 0, forceIndex) {
   if (busy.has(deck)) return;
   const slot = slotOf(deck);
   const flipper = $(".flipper", slot);
   const front = $(".front", slot);
-  pick(deck);
-  const swap = () => { front.innerHTML = cardInner(deck, DECKS[deck].cards[state[deck]]); syncDeck(deck); };
+  if (forceIndex === undefined) pick(deck); else state[deck] = forceIndex;
+  const swap = () => {
+    const card = DECKS[deck].cards[state[deck]];
+    front.innerHTML = cardInner(deck, card);
+    front.classList.toggle("mine", !!card.mine);
+    syncDeck(deck);
+  };
   if (reduceMotion) return swap();
 
   busy.add(deck);
@@ -111,7 +138,7 @@ function flip(deck, delay = 0) {
     );
     setTimeout(swap, dur * 0.5);
     spin.onfinish = spin.oncancel = () => busy.delete(deck);
-    navigator.vibrate?.(8);
+    if (navigator.userActivation?.hasBeenActive) navigator.vibrate?.(8);
   }, delay);
 }
 
@@ -121,7 +148,7 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toast.id);
-  toast.id = setTimeout(() => t.classList.remove("show"), 1800);
+  toast.id = setTimeout(() => t.classList.remove("show"), 2000);
 }
 
 function dealAll() {
@@ -132,12 +159,30 @@ function dealAll() {
   $$("[data-hand]").forEach((el) => (el.textContent = `· hand ${hand}`));
 }
 
-// ---- wiring ----
+// Pointer tilt + glare for a host element; vars are written on `target`, glare position on `host`.
+function tiltable(host, target) {
+  host.addEventListener("pointermove", (e) => {
+    if (e.pointerType === "touch" || reduceMotion) return;
+    const r = host.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    target.style.setProperty("--ry", `${(px - 0.5) * 24}deg`);
+    target.style.setProperty("--rx", `${(0.5 - py) * 24}deg`);
+    host.style.setProperty("--gx", `${px * 100}%`);
+    host.style.setProperty("--gy", `${py * 100}%`);
+    host.classList.add("live");
+  });
+  host.addEventListener("pointerleave", () => {
+    target.style.removeProperty("--rx");
+    target.style.removeProperty("--ry");
+    host.classList.remove("live");
+  });
+}
+
+// ---- hero wiring ----
 $$(".slot").forEach((slot) => {
   const deck = slot.dataset.slot;
-  const tilt = $(".tilt", slot);
   $(".hit", slot).addEventListener("click", () => flip(deck));
-
   const lock = $(".lock", slot);
   lock.addEventListener("click", () => {
     const on = !held.has(deck);
@@ -146,24 +191,7 @@ $$(".slot").forEach((slot) => {
     lock.setAttribute("aria-label", `${on ? "Release" : "Hold"} this ${deck} card`);
     slot.classList.toggle("held", on);
   });
-
-  // pointer tilt + glare (mouse and pen only)
-  slot.addEventListener("pointermove", (e) => {
-    if (e.pointerType === "touch" || reduceMotion) return;
-    const r = slot.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    tilt.style.setProperty("--ry", `${(px - 0.5) * 24}deg`);
-    tilt.style.setProperty("--rx", `${(0.5 - py) * 24}deg`);
-    slot.style.setProperty("--gx", `${px * 100}%`);
-    slot.style.setProperty("--gy", `${py * 100}%`);
-    slot.classList.add("live");
-  });
-  slot.addEventListener("pointerleave", () => {
-    tilt.style.removeProperty("--rx");
-    tilt.style.removeProperty("--ry");
-    slot.classList.remove("live");
-  });
+  tiltable(slot, $(".tilt", slot));
 });
 
 $$("[data-deal]").forEach((btn) => btn.addEventListener("click", dealAll));
@@ -175,9 +203,90 @@ $("[data-copy]")?.addEventListener("click", async () => {
 });
 addEventListener("keydown", (e) => {
   if (e.key.toLowerCase() !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (/^(input|textarea|select)$/i.test(e.target.tagName)) return;
+  if (/^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable) return;
   dealAll();
 });
+
+// ---- save as image / share ----
+async function deliver(blob, name, shareTitle) {
+  const file = new File([blob], name, { type: "image/png" });
+  if (matchMedia("(pointer: coarse)").matches && navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: shareTitle }); return; } catch (e) { if (e.name === "AbortError") return; }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  toast("Image saved");
+}
+
+$("[data-save]")?.addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    const parts = [...$(".draft .scenario").childNodes].map((n) => ({ t: n.textContent, deck: n.dataset?.say }));
+    const picks = Object.fromEntries(ORDER.map((d) => [d, DECKS[d].cards[state[d]]]));
+    const blob = await makePoster(parts, picks, hand);
+    await deliver(blob, `pedagogy-playcards-hand-${hand}.png`, "My draft scenario");
+  } catch { toast("Couldn’t build the image"); }
+  btn.disabled = false;
+});
+
+// ---- make a card ----
+const form = $("#maker");
+if (form) {
+  const preview = $("#preview");
+  const wrap = $(".make-card");
+  const titleEl = form.elements.title;
+  const descEl = form.elements.desc;
+  const descField = $("[data-desc]", form);
+  const count = $("[data-count]", form);
+  const deckVal = () => form.elements.deck.value;
+  const current = () => ({ t: titleEl.value.trim() || "Your card", d: deckVal() === "action" ? undefined : descEl.value.trim() });
+
+  const render = () => {
+    const deck = deckVal();
+    descField.hidden = deck === "action";
+    count.textContent = descEl.value.length;
+    wrap.dataset.deck = deck;
+    preview.dataset.deck = deck;
+    preview.innerHTML = cardInner(deck, current());
+    const ok = titleEl.value.trim().length > 0;
+    $$("button[type=submit], [data-download-card]", form).forEach((b) => (b.disabled = !ok));
+  };
+  form.addEventListener("input", render);
+  tiltable(wrap, preview);
+  render();
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const deck = deckVal();
+    const { t, d } = current();
+    const idx = addToDeck(deck, t, d);
+    if (!mine.some((m) => m.deck === deck && m.t.toLowerCase() === t.toLowerCase())) mine.push({ deck, t, d });
+    else mine.find((m) => m.deck === deck && m.t.toLowerCase() === t.toLowerCase()).d = d;
+    saveMine();
+    held.delete(deck);
+    const slot = slotOf(deck);
+    slot.classList.remove("held");
+    $(".lock", slot).setAttribute("aria-pressed", "false");
+    preview.classList.remove("bump"); void preview.offsetWidth; preview.classList.add("bump");
+    $("#draw").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    setTimeout(() => flip(deck, 0, idx), reduceMotion ? 0 : 700);
+    toast(`“${t}” is in your hand`);
+  });
+
+  $("[data-download-card]", form).addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const { t, d } = current();
+      const blob = await makeCardPng(deckVal(), { t, d });
+      await deliver(blob, `playcard-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, t);
+    } catch { toast("Couldn’t build the image"); }
+    btn.disabled = false;
+  });
+}
 
 // ---- opening: a face-down pile fans out to the table and turns over, card by card ----
 function intro() {

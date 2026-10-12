@@ -154,12 +154,13 @@ h2, h3 { font-family: var(--display); text-wrap: balance; }
 .flipper { position: relative; transform-style: preserve-3d; }
 .flipper .card { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .flipper .back { position: absolute; inset: 0; transform: rotateY(180deg); }
-.front::after {
+.front::after, .preview::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   background: radial-gradient(circle at var(--gx, 50%) var(--gy, 30%), rgba(255,255,255,.7), transparent 55%);
   mix-blend-mode: soft-light; opacity: 0; transition: opacity 0.3s;
 }
-.slot.live .front::after { opacity: 1; }
+.slot.live .front::after, .make-card.live .preview::after { opacity: 1; }
+.front.mine .k::after { content: " ✦"; }
 .slot.held .front { outline: 3px solid var(--ink); outline-offset: 4px; }
 
 /* card back: ink stock, deck-colour star and corner codes */
@@ -195,6 +196,8 @@ h2, h3 { font-family: var(--display); text-wrap: balance; }
 kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: #fff; color: var(--ink); }
 .hand { color: var(--ink); letter-spacing: 0.1em; }
 .btn-ghost svg { width: 1rem; height: 1rem; }
+.draft-row { flex-wrap: nowrap; gap: 0.5rem; }
+.draft-row .btn { padding: 0.85rem 1.05rem; font-size: 0.9rem; gap: 0.45rem; white-space: nowrap; }
 .hl.pop { animation: sweep 0.7s cubic-bezier(.2,.8,.2,1); }
 @keyframes sweep { from { background-size: 0 100%; } to { background-size: 100% 100%; } }
 .toast { position: fixed; z-index: 60; left: 50%; bottom: 1.5rem; translate: -50% 1rem; opacity: 0; pointer-events: none; margin: 0; padding: 0.8rem 1.2rem; border-radius: 999px; background: var(--ink); color: #fff; font: 600 0.9rem/1 var(--sans); transition: opacity 0.25s, translate 0.35s cubic-bezier(.2,.8,.2,1); }
@@ -274,6 +277,44 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
 .tpl-prompt small { margin-bottom: 0.8rem; }
 .tpl-prompt .scenario { font-size: clamp(1.2rem, 1.8vw, 1.6rem); }
 
+
+/* ---------- make a card (ink) ---------- */
+.make { background: var(--ink); color: #fff; padding: clamp(5rem, 10vw, 9rem) var(--gut); }
+.make-in { max-width: var(--max); margin-inline: auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: clamp(2.5rem, 6vw, 7rem); align-items: center; }
+.make-copy { display: flex; flex-direction: column; gap: 1.2rem; align-items: flex-start; }
+.make-copy h2 { font: 700 clamp(2.4rem, 5vw, 4.8rem)/1 var(--display); letter-spacing: -0.03em; }
+.make-copy h2 em { font-family: var(--serif); font-weight: 400; color: var(--y); }
+.make-copy > p { color: rgba(255,255,255,.75); max-width: 44ch; }
+.maker { width: 100%; max-width: 34rem; display: grid; gap: 1.25rem; margin-top: 0.75rem; }
+.seg { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.seg legend, .field > span { display: flex; justify-content: space-between; font: 700 0.72rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,.62); padding: 0; margin-bottom: 0.7rem; }
+.seg legend { float: left; width: 100%; }
+.seg label { cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: inline-block; font: 600 0.9rem/1 var(--sans); padding: 0.7rem 1.1rem; border-radius: 999px; border: 1.5px solid rgba(255,255,255,.35); transition: background 0.2s, color 0.2s, border-color 0.2s; }
+.seg label:hover span { border-color: #fff; }
+.seg input:checked + span { background: var(--c); color: var(--ci); border-color: var(--c); }
+.seg input:focus-visible + span { outline: 3px solid #fff; outline-offset: 3px; }
+.field { display: block; }
+.field small { font: 600 0.72rem/1 var(--sans); letter-spacing: 0.06em; color: rgba(255,255,255,.5); }
+.field input, .field textarea { width: 100%; font: 500 1.05rem/1.4 var(--sans); color: #fff; background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.28); border-radius: 12px; padding: 0.95rem 1.05rem; resize: vertical; transition: border-color 0.2s, background 0.2s; }
+.field textarea { font-family: var(--serif); font-size: 1.1rem; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--y); background: rgba(255,255,255,.1); }
+.field[hidden] { display: none; }
+.make-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.btn-ghost-light { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
+.btn-ghost-light:hover { background: #fff; color: var(--ink); border-color: #fff; }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+.make-note { font-size: 0.875rem; color: rgba(255,255,255,.5); }
+
+.make-card { position: relative; display: grid; place-items: center; padding: clamp(1.5rem, 4vw, 3.5rem); perspective: 1100px; }
+.make-card::before { content: ""; position: absolute; inset: 4%; border-radius: 50%; background: color-mix(in srgb, var(--c) 24%, transparent); transition: background 0.4s; }
+.preview { width: min(100%, 22rem); rotate: -3deg; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform 0.7s cubic-bezier(.2,.8,.2,1); }
+.make-card.live .preview { transition: transform 0.12s linear; }
+.preview .in { transition: background 0.3s, color 0.3s; }
+.preview.bump { animation: bump 0.4s cubic-bezier(.2,.8,.2,1); }
+@keyframes bump { 40% { scale: 1.035; } }
+
 /* ---------- field notes ---------- */
 .notes { padding: clamp(5rem, 11vw, 10rem) var(--gut); background: var(--paper); }
 .notes-in { max-width: var(--max); margin-inline: auto; }
@@ -322,7 +363,7 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
 
 /* ---------- responsive ---------- */
 @media (max-width: 62rem) {
-  .hero-grid, .premise-cols, .more-grid, .method-in, .notes-cols, .research-head, .rows li { grid-template-columns: 1fr; }
+  .hero-grid, .premise-cols, .more-grid, .method-in, .make-in, .notes-cols, .research-head, .rows li { grid-template-columns: 1fr; }
   .hero-grid { gap: 3rem; margin-top: 1rem; }
   .strap br { display: none; }
   .foot { grid-template-columns: 1fr; }
