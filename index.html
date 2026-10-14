@@ -30,17 +30,15 @@
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/newsreader-latin-italic.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/src/style.css" />
-  <script>document.documentElement.classList.add("js");setTimeout(function(){document.documentElement.classList.add("ready")},2500)</script>
+  <script>document.documentElement.classList.add("js");setTimeout(function(){document.documentElement.classList.add("ready")},900)</script>
 </head>
 <body id="top">
 <a class="skip" href="#main">Skip to content</a>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="star" viewBox="0 0 24 24"><path d="M12 0c.9 6.2 5.8 11.1 12 12-6.2.9-11.1 5.8-12 12-.9-6.2-5.8-11.1-12-12C6.2 11.1 11.1 6.2 12 0z"/></symbol>
-  <symbol id="g-v" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 21c0-6 2-10 8-13-1 6-3 10-8 13z"/><path d="M12 21c0-6-3-10-8-11 1 6 4 9 8 11z"/></g></symbol>
-  <symbol id="g-m" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.6-5.7M20 12a8 8 0 0 1-13.6 5.7"/><path d="M17.5 3v4h-4M6.5 21v-4h4"/></g></symbol>
-  <symbol id="g-p" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M9.5 21v-6h5v6"/></g></symbol>
   <symbol id="redo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></g></symbol>
   <symbol id="img" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></g></symbol>
   <symbol id="lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol>
@@ -52,6 +50,7 @@
   <button class="menu" type="button" aria-expanded="false" aria-controls="nav"><i aria-hidden="true"></i><span data-menu-label>Menu</span></button>
   <nav id="nav" aria-label="Primary">
     <a href="#decks">The decks</a>
+    <a href="#cards-all" class="hide-sm">All cards</a>
     <a href="#method" class="hide-sm">Method</a>
     <a href="#make" class="hide-sm">Make a card</a>
     <a href="#notes" class="hide-sm">Field notes</a>
@@ -81,46 +80,13 @@
 
       <div class="deal" id="draw">
         <div class="table">
-          <div class="cards" id="cards">
-          <div class="slot" data-slot="action" style="--i:0">
-            <div class="tilt"><div class="flipper">
-              <div class="card front" data-deck="action"><div class="in"><span class="k">Action Word</span><div class="mid"><span class="t">Apply</span></div><span class="c">A</span></div></div>
-              <div class="card back" data-deck="action" aria-hidden="true"><div class="in"><svg aria-hidden="true"><use href="#star"/></svg><span class="bc tl">A</span><span class="bc br">A</span></div></div>
-            </div></div>
-            <button class="hit" type="button" aria-label="Action word: Apply. Flip for a new one."></button>
-            <button class="lock" type="button" aria-pressed="false" aria-label="Hold this action card"><svg aria-hidden="true"><use href="#lock"/></svg></button>
-          </div>
-          <div class="slot" data-slot="place" style="--i:1">
-            <div class="tilt"><div class="flipper">
-              <div class="card front" data-deck="place"><div class="in"><span class="k">Places &amp; Spaces Card</span><div class="mid"><svg class="g" aria-hidden="true"><use href="#g-p"/></svg><span class="t">Artisanal Marketplace</span><p class="d">Where locally crafted products are sold, often by independent artisans or small businesses.</p></div><span class="c">P&amp;S</span></div></div>
-              <div class="card back" data-deck="place" aria-hidden="true"><div class="in"><svg aria-hidden="true"><use href="#star"/></svg><span class="bc tl">P&amp;S</span><span class="bc br">P&amp;S</span></div></div>
-            </div></div>
-            <button class="hit" type="button" aria-label="Place: Artisanal Marketplace. Flip for a new one."></button>
-            <button class="lock" type="button" aria-pressed="false" aria-label="Hold this place card"><svg aria-hidden="true"><use href="#lock"/></svg></button>
-          </div>
-          <div class="slot" data-slot="value" style="--i:2">
-            <div class="tilt"><div class="flipper">
-              <div class="card front" data-deck="value"><div class="in"><span class="k">Value Card</span><div class="mid"><svg class="g" aria-hidden="true"><use href="#g-v"/></svg><span class="t">Lifelong Learning</span><p class="d">Continuous search of knowledge and personal development beyond formal education; a commitment to ongoing learning.</p></div><span class="c">V</span></div></div>
-              <div class="card back" data-deck="value" aria-hidden="true"><div class="in"><svg aria-hidden="true"><use href="#star"/></svg><span class="bc tl">V</span><span class="bc br">V</span></div></div>
-            </div></div>
-            <button class="hit" type="button" aria-label="Value: Lifelong Learning. Flip for a new one."></button>
-            <button class="lock" type="button" aria-pressed="false" aria-label="Hold this value card"><svg aria-hidden="true"><use href="#lock"/></svg></button>
-          </div>
-          <div class="slot" data-slot="mode" style="--i:3">
-            <div class="tilt"><div class="flipper">
-              <div class="card front" data-deck="mode"><div class="in"><span class="k">Mode &amp; Methods Card</span><div class="mid"><svg class="g" aria-hidden="true"><use href="#g-m"/></svg><span class="t">Flipped Classroom</span><p class="d">Reverses the traditional teaching model, where students engage with learning materials beforehand and use classroom time for active discussions and problem-solving</p></div><span class="c">M</span></div></div>
-              <div class="card back" data-deck="mode" aria-hidden="true"><div class="in"><svg aria-hidden="true"><use href="#star"/></svg><span class="bc tl">M</span><span class="bc br">M</span></div></div>
-            </div></div>
-            <button class="hit" type="button" aria-label="Mode: Flipped Classroom. Flip for a new one."></button>
-            <button class="lock" type="button" aria-pressed="false" aria-label="Hold this mode card"><svg aria-hidden="true"><use href="#lock"/></svg></button>
-          </div>
-          </div>
+          <div class="cards" id="cards"><!--@hero-slots--></div>
         </div>
-        <p class="hint"><span class="hint-touch">A demo draw with sample cards. Tap a card to flip it; lock the ones you like.</span><span class="hint-key">A demo draw with sample cards. Click a card to flip it, pin the ones you like, press <kbd>Shift</kbd> + <kbd>D</kbd> to deal.</span></p>
+        <p class="hint"><span class="hint-touch">A demo draw: one card from each deck. Tap a card to flip it; lock the ones you like.</span><span class="hint-key">A demo draw: one card from each deck. Click a card to flip it, pin the ones you like, press <kbd>Shift</kbd> + <kbd>D</kbd> to deal.</span></p>
 
         <div class="draft">
-          <p class="draft-label">Your draft scenario <span class="hand" data-hand>· hand 1</span></p>
-          <p class="scenario">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
+          <label class="draft-label" for="prompt">Your prompt <span class="hand" data-hand>· hand 1</span></label>
+          <textarea id="prompt" class="prompt-field" rows="2" maxlength="240" placeholder="Write a concise, vivid description of the learning environment this hand suggests."></textarea>
           <div class="draft-row">
             <button class="btn" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
             <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg><span class="lbl">Copy</span></button>
@@ -166,79 +132,29 @@
 </section>
 
 <!-- ============ DECKS (sticky stack) ============ -->
-<section class="decks" id="decks" aria-label="The four decks">
-  <article class="sheet" data-deck="action" style="--n:0">
-    <div class="tab"><span class="tab-code">A</span>Action Words</div>
-    <div class="sheet-body">
-      <span class="glyph" aria-hidden="true">A</span>
-      <div class="copy">
-        <h2>Action Words</h2>
-        <p>A set of action verbs that serve as prompts, encouraging users to define dynamic interactions within their scenarios.</p>
-      </div>
-      <div class="fan">
-        <div class="card sample b1" data-deck="action" aria-hidden="true"><div class="in"><span class="k">Action Word</span><div class="mid"><span class="t">Remix</span></div><span class="c">A</span></div></div>
-        <div class="card sample b2" data-deck="action" aria-hidden="true"><div class="in"><span class="k">Action Word</span><div class="mid"><span class="t">Unlearn</span></div><span class="c">A</span></div></div>
-        <div class="card f" data-deck="action"><div class="in"><span class="k">Action Word</span><div class="mid"><span class="t">Apply</span></div><span class="c">A</span></div></div>
-      </div>
-    </div>
-  </article>
+<section class="decks" id="decks" aria-label="The five decks"><!--@sheets--></section>
 
-  <article class="sheet" data-deck="value" style="--n:1">
-    <div class="tab"><span class="tab-code">V</span>Value Cards</div>
-    <div class="sheet-body">
-      <span class="glyph" aria-hidden="true">V</span>
-      <div class="copy">
-        <h2>Value Cards</h2>
-        <p>Twenty-four cards, each representing a distinct educational value or orientation. Users can also create custom cards to reflect emerging values.</p>
-        <span class="pill">Make your own cards</span>
-      </div>
-      <div class="fan">
-        <div class="card sample b1" data-deck="value" aria-hidden="true"><div class="in"><span class="k">Value Card</span><div class="mid"><svg class="g"><use href="#g-v"/></svg><span class="t">Care</span></div><span class="c">V</span></div></div>
-        <div class="card sample b2" data-deck="value" aria-hidden="true"><div class="in"><span class="k">Value Card</span><div class="mid"><svg class="g"><use href="#g-v"/></svg><span class="t">Curiosity</span></div><span class="c">V</span></div></div>
-        <div class="card f" data-deck="value"><div class="in"><span class="k">Value Card</span><div class="mid"><svg class="g"><use href="#g-v"/></svg><span class="t">Lifelong Learning</span><p class="d">Continuous search of knowledge and personal development beyond formal education; a commitment to ongoing learning.</p></div><span class="c">V</span></div></div>
-      </div>
-    </div>
-  </article>
-
-  <article class="sheet" data-deck="mode" style="--n:2">
-    <div class="tab"><span class="tab-code">M</span>Modes &amp; Methods</div>
-    <div class="sheet-body">
-      <span class="glyph" aria-hidden="true">M</span>
-      <div class="copy">
-        <h2>Modes &amp; Methods</h2>
-        <p>Diverse approaches and techniques for delivering learning experiences.</p>
-      </div>
-      <div class="fan">
-        <div class="card sample b1" data-deck="mode" aria-hidden="true"><div class="in"><span class="k">Mode &amp; Methods Card</span><div class="mid"><svg class="g"><use href="#g-m"/></svg><span class="t">Peer Circle</span></div><span class="c">M</span></div></div>
-        <div class="card sample b2" data-deck="mode" aria-hidden="true"><div class="in"><span class="k">Mode &amp; Methods Card</span><div class="mid"><svg class="g"><use href="#g-m"/></svg><span class="t">Apprenticeship</span></div><span class="c">M</span></div></div>
-        <div class="card f" data-deck="mode"><div class="in"><span class="k">Mode &amp; Methods Card</span><div class="mid"><svg class="g"><use href="#g-m"/></svg><span class="t">Flipped Classroom</span><p class="d">Reverses the traditional teaching model, where students engage with learning materials beforehand and use classroom time for active discussions and problem-solving</p></div><span class="c">M</span></div></div>
-      </div>
-    </div>
-  </article>
-
-  <article class="sheet" data-deck="place" style="--n:3">
-    <div class="tab"><span class="tab-code">P&amp;S</span>Places &amp; Spaces</div>
-    <div class="sheet-body">
-      <span class="glyph glyph-wide" aria-hidden="true">P&amp;S</span>
-      <div class="copy">
-        <h2>Places &amp; Spaces</h2>
-        <p>The physical and imagined spaces where learning might occur, including public venues and speculative environments. Users can extend the list by inventing new, context-specific spaces.</p>
-        <span class="pill">Invent new places</span>
-      </div>
-      <div class="fan">
-        <div class="card sample b1" data-deck="place" aria-hidden="true"><div class="in"><span class="k">Places &amp; Spaces Card</span><div class="mid"><svg class="g"><use href="#g-p"/></svg><span class="t">Public Library</span></div><span class="c">P&amp;S</span></div></div>
-        <div class="card sample b2" data-deck="place" aria-hidden="true"><div class="in"><span class="k">Places &amp; Spaces Card</span><div class="mid"><svg class="g"><use href="#g-p"/></svg><span class="t">Riverbank</span></div><span class="c">P&amp;S</span></div></div>
-        <div class="card f" data-deck="place"><div class="in"><span class="k">Places &amp; Spaces Card</span><div class="mid"><svg class="g"><use href="#g-p"/></svg><span class="t">Artisanal Marketplace</span><p class="d">Where locally crafted products are sold, often by independent artisans or small businesses.</p></div><span class="c">P&amp;S</span></div></div>
-      </div>
-    </div>
-  </article>
+<!-- ============ THE GALLERY ============ -->
+<section class="browse" id="cards-all" aria-labelledby="browse-h">
+  <div class="browse-in">
+    <h2 id="browse-h">Every card we have, face and back.</h2>
+    <p class="browse-lede">Seventeen cards from five decks, photographed from the printed set. Each deck holds more cards than are shown here. Open any card to read it larger.</p>
+    <div class="filters" role="group" aria-label="Filter by deck"><!--@chips--></div>
+    <ul class="grid" id="grid"><!--@items--></ul>
+    <h3 class="backs-title">The back of each deck</h3>
+    <ul class="grid grid-backs"><!--@backs--></ul>
+  </div>
 </section>
 
 <!-- ============ PROMPTS + THING OF THE FUTURE ============ -->
 <section class="more">
   <div class="more-in">
-    <h2>Beyond the four decks:<br><em>prompts, and an optional Thing of the Future.</em></h2>
+    <h2>Also in the tool:<br><em>action words, prompts, and an optional Thing of the Future.</em></h2>
     <div class="more-grid">
+      <article>
+        <h3>Action Words</h3>
+        <p>A set of action verbs that serve as prompts, encouraging users to define dynamic interactions within their scenarios.</p>
+      </article>
       <article>
         <h3>Prompts</h3>
         <p>Participants are invited to create concise, vivid descriptions of future learning environments, translating speculative ideas into actionable visions.</p>
@@ -265,15 +181,16 @@
     <div class="template" role="group" aria-label="Drafting template, filled with your current hand">
       <div class="tpl-head"><span>Draft scenario</span><svg aria-hidden="true"><use href="#star"/></svg></div>
       <div class="tpl-slots">
-        <div class="tpl-slot" data-deck="action"><small>Action</small><b data-name="action">Apply</b></div>
+        <div class="tpl-slot" data-deck="issue"><small>Issue</small><b data-name="issue">Curricular Problems</b></div>
+        <div class="tpl-slot" data-deck="forces"><small>Force</small><b data-name="forces">Flowing</b></div>
         <div class="tpl-slot" data-deck="value"><small>Value</small><b data-name="value">Lifelong Learning</b></div>
-        <div class="tpl-slot" data-deck="mode"><small>Mode</small><b data-name="mode">Flipped Classroom</b></div>
-        <div class="tpl-slot" data-deck="place"><small>Place</small><b data-name="place">Artisanal Marketplace</b></div>
+        <div class="tpl-slot" data-deck="methods"><small>Method</small><b data-name="methods">Experiential Learning</b></div>
+        <div class="tpl-slot" data-deck="places"><small>Place</small><b data-name="places">Museum / Gallery</b></div>
       </div>
       <div class="tpl-thing"><small>The Thing of the Future</small><span>optional: an imaginary artifact</span></div>
       <div class="tpl-prompt">
         <small>Prompt</small>
-        <p class="scenario">A school where learners <span class="hl" data-deck="action" data-say="action">apply</span> <span class="hl" data-deck="value" data-say="value">lifelong learning</span>, through <span class="hl" data-deck="mode" data-say="mode">a flipped classroom</span>, inside <span class="hl" data-deck="place" data-say="place">an artisanal marketplace</span>.</p>
+        <p data-prompt class="empty">Write your prompt in the hand above and it appears here.</p>
       </div>
     </div>
   </div>
@@ -290,7 +207,7 @@
         <fieldset class="seg">
           <legend>Which deck?</legend>
           <label><input type="radio" name="deck" value="value"><span data-deck="value">Value</span></label>
-          <label><input type="radio" name="deck" value="place" checked><span data-deck="place">Place</span></label>
+          <label><input type="radio" name="deck" value="places" checked><span data-deck="places">Place</span></label>
         </fieldset>
         <label class="field">
           <span>Title</span>
@@ -309,8 +226,8 @@
       </form>
     </div>
 
-    <div class="make-card" data-deck="place">
-      <div class="card preview" id="preview" data-deck="place"></div>
+    <div class="make-card" data-deck="places">
+      <div class="card preview" id="preview" data-deck="places"></div>
     </div>
   </div>
 </section>
@@ -388,6 +305,8 @@
 
 </main>
 
+<dialog class="zoom-dialog" id="zoom" aria-label="Card"><div class="zoom-box"><button class="zoom-close" type="button" aria-label="Close" data-zoom-close>&times;</button><div id="zoom-card"></div><p class="zoom-cap" id="zoom-cap"></p></div></dialog>
+
 <footer class="site-foot"><div class="foot">
     <div>
       <p class="foot-h">Authors</p>
@@ -399,7 +318,7 @@
     </div>
     <div>
       <p class="foot-h">Note</p>
-      <p>An ongoing work. Only the four cards printed on the box are real. Every other card here is an illustrative sample, and the random draw is a demo, not the rules of the game.</p>
+      <p>An ongoing work. The card faces are rebuilt in code from photographs of the printed decks, and their artwork is cropped from those photographs. The random draw is a demo, not the rules of the game.</p>
     </div>
   </div></footer>
 

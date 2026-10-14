@@ -1,59 +1,9 @@
-// Pedagogy Playcards: deal a hand, mirror it on the drafting template, reveal the quote on scroll.
-// Only the four cards printed on the box are real (flagged `real`); every other card is an illustrative sample.
+// Pedagogy Playcards: deal a hand from the five real decks, write a prompt, browse every card.
+// The cards come from ./cards-data.js (transcribed from photographs of the printed decks).
 
-const DECKS = {
-  action: {
-    label: "Action Word", code: "A",
-    cards: [
-      { t: "Apply", say: "apply", real: true },
-      { t: "Remix", say: "remix" },
-      { t: "Unlearn", say: "unlearn" },
-      { t: "Gather", say: "gather around" },
-      { t: "Trade", say: "trade" },
-      { t: "Mend", say: "mend" },
-      { t: "Perform", say: "perform" },
-      { t: "Translate", say: "translate" },
-      { t: "Forget", say: "forget" },
-    ],
-  },
-  value: {
-    label: "Value Card", code: "V", glyph: "g-v",
-    cards: [
-      { t: "Lifelong Learning", say: "lifelong learning", real: true, d: "Continuous search of knowledge and personal development beyond formal education; a commitment to ongoing learning." },
-      { t: "Care", say: "care", d: "Attention to the wellbeing of others as the basis for how learning is organised." },
-      { t: "Curiosity", say: "curiosity", d: "Following questions for their own sake, before anyone asks for an answer." },
-      { t: "Equity", say: "fairness", d: "Access to learning that does not depend on where, or to whom, you were born." },
-      { t: "Autonomy", say: "autonomy", d: "Learners setting their own direction, pace and measures of progress." },
-      { t: "Solidarity", say: "solidarity", d: "Knowing and growing together, with shared credit and shared risk." },
-      { t: "Playfulness", say: "playfulness", d: "Serious work done with lightness, where trying things out is allowed." },
-    ],
-  },
-  mode: {
-    label: "Mode & Methods Card", code: "M", glyph: "g-m",
-    cards: [
-      { t: "Flipped Classroom", say: "a flipped classroom", real: true, d: "Reverses the traditional teaching model, where students engage with learning materials beforehand and use classroom time for active discussions and problem-solving" },
-      { t: "Peer Circle", say: "peer circles", d: "Learners teach and question one another with no lecturer at the centre." },
-      { t: "Apprenticeship", say: "apprenticeship", d: "Learning a practice by working beside someone who already does it." },
-      { t: "Field Expedition", say: "field expeditions", d: "Leaving the classroom to study a place or problem where it actually lives." },
-      { t: "Role‑play", say: "role-play", d: "Stepping into another position to understand how a situation looks from there." },
-      { t: "Studio Critique", say: "studio critique", d: "Work shown unfinished and shaped by open, specific feedback." },
-    ],
-  },
-  place: {
-    label: "Places & Spaces Card", code: "P&S", glyph: "g-p",
-    cards: [
-      { t: "Artisanal Marketplace", say: "an artisanal marketplace", real: true, d: "Where locally crafted products are sold, often by independent artisans or small businesses." },
-      { t: "Public Library", say: "a public library", d: "A shared civic space for borrowing knowledge, open to anyone who walks in." },
-      { t: "Railway Platform", say: "a railway platform", d: "A place of waiting, crossing and chance meetings between strangers." },
-      { t: "Community Kitchen", say: "a community kitchen", d: "A space where food is made for many hands and many mouths." },
-      { t: "Rooftop Garden", say: "a rooftop garden", d: "Growing things in the air above the city, tended by whoever is around." },
-      { t: "Riverbank", say: "a riverbank", d: "An open edge between land and water where activity follows the season." },
-    ],
-  },
-};
+import { DECKS, DECK_ORDER, INITIAL_HAND, cardFace, faceInner, titleOf, wrapTitle } from "./cards-data.js";
 
-const ORDER = ["action", "value", "mode", "place"];
-const state = { action: 0, value: 0, mode: 0, place: 0 };
+const state = { ...INITIAL_HAND };
 const held = new Set();
 const busy = new Set();
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -62,62 +12,55 @@ let hand = 1;
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const slotOf = (deck) => $(`.slot[data-slot="${deck}"]`);
+const cardOf = (deck) => DECKS[deck].cards[state[deck]];
 
 // ---- cards made by visitors persist in this browser ----
-const STORE = "pp.cards";
+const STORE = "pp.cards.v2";
 const mine = (() => { try { return JSON.parse(localStorage.getItem(STORE)) || []; } catch { return []; } })();
-const saveMine = () => { try { localStorage.setItem(STORE, JSON.stringify(mine)); } catch { /* storage blocked: cards last for this visit only */ } };
+const saveMine = () => { try { localStorage.setItem(STORE, JSON.stringify(mine)); } catch { /* storage blocked: cards last for this visit */ } };
 
-function phraseFor(deck, title) {
-  const t = title.trim().toLowerCase();
-  if (deck === "mode" || deck === "place") return /^(a|an|the)\s/.test(t) ? t : `the ${t}`;
-  return t;
-}
-function addToDeck(deck, title, desc) {
+function addCustom(deck, title, desc) {
   const cards = DECKS[deck].cards;
-  const found = cards.findIndex((c) => c.t.toLowerCase() === title.trim().toLowerCase());
-  if (found >= 0) { cards[found].d = deck === "action" ? undefined : desc; return found; }
-  cards.push({ t: title.trim(), say: phraseFor(deck, title), d: deck === "action" ? undefined : desc, mine: true });
+  const card = {
+    id: `mine-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    mine: true,
+    lines: wrapTitle(title),
+    desc: desc || undefined,
+    art: { type: deck === "value" ? "star" : "pin" },
+  };
+  const at = cards.findIndex((c) => c.mine && c.id === card.id);
+  if (at >= 0) { cards[at] = card; return at; }
+  cards.push(card);
   return cards.length - 1;
 }
-mine.forEach((m) => addToDeck(m.deck, m.t, m.d));
+mine.filter((m) => DECKS[m.deck]).forEach((m) => addCustom(m.deck, m.title, m.desc));
 
-function cardInner(deck, card) {
-  const d = DECKS[deck];
-  const glyph = d.glyph ? `<svg class="g" aria-hidden="true"><use href="#${d.glyph}"/></svg>` : "";
-  const desc = card.d ? `<p class="d">${esc(card.d)}</p>` : "";
-  return `<div class="in"><span class="k">${d.label}</span><div class="mid">${glyph}<span class="t">${esc(card.t)}</span>${desc}</div><span class="c">${d.code}</span></div>`;
-}
-function esc(s) { return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+// ---- keeping the page in step with the hand ----
+const handText = () => DECK_ORDER.map((d) => `${DECKS[d].name}: ${titleOf(cardOf(d))}`);
 
-// Write the chosen card into the sentence, the template and the slot's label, then sweep the highlight.
 const announce = () => {
   clearTimeout(announce.id);
   announce.id = setTimeout(() => {
     const sr = $("#sr");
-    if (sr) sr.textContent = `New hand: ${$(".draft .scenario").textContent.trim()}`;
+    if (sr) sr.textContent = `New hand: ${handText().join("; ")}.`;
   }, 700);
 };
 
 function syncDeck(deck) {
-  const card = DECKS[deck].cards[state[deck]];
-  $$(`[data-say="${deck}"]`).forEach((el) => {
-    el.textContent = card.say;
-    if (!reduceMotion) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
-  });
-  $$(`[data-name="${deck}"]`).forEach((el) => (el.textContent = card.t));
-  $(".hit", slotOf(deck))?.setAttribute("aria-label", `${DECKS[deck].label}: ${card.t}. Flip for a new one.`);
+  const card = cardOf(deck);
+  $$(`[data-name="${deck}"]`).forEach((el) => (el.textContent = titleOf(card)));
+  $(".hit", slotOf(deck))?.setAttribute("aria-label", `${DECKS[deck].noun}: ${titleOf(card)}. Flip for a new one.`);
   announce();
 }
 
 function pick(deck) {
   const n = DECKS[deck].cards.length;
   let next = state[deck];
-  while (next === state[deck]) next = Math.floor(Math.random() * n);
+  while (next === state[deck] && n > 1) next = Math.floor(Math.random() * n);
   state[deck] = next;
 }
 
-// A full 360° spin that lifts toward the viewer; the new face is swapped in while the back is showing.
+// A full 360° spin that lifts toward the viewer; the new face is swapped in while the deck's back is showing.
 function flip(deck, delay = 0, forceIndex) {
   if (busy.has(deck)) return;
   const slot = slotOf(deck);
@@ -125,10 +68,9 @@ function flip(deck, delay = 0, forceIndex) {
   const front = $(".front", slot);
   if (forceIndex === undefined) pick(deck); else state[deck] = forceIndex;
   const swap = () => {
-    const card = DECKS[deck].cards[state[deck]];
-    front.innerHTML = cardInner(deck, card);
+    const card = cardOf(deck);
+    front.innerHTML = faceInner(deck, card, { eager: true, sizes: "125px" });
     front.classList.toggle("mine", !!card.mine);
-    front.classList.toggle("sample", !card.real && !card.mine);
     syncDeck(deck);
   };
   if (reduceMotion) return swap();
@@ -160,9 +102,9 @@ function toast(msg) {
 }
 
 function dealAll() {
-  const free = ORDER.filter((d) => !held.has(d));
+  const free = DECK_ORDER.filter((d) => !held.has(d));
   if (!free.length) return toast("Every card is pinned. Unpin one to deal.");
-  free.forEach((deck, i) => flip(deck, i * 140));
+  free.forEach((deck, i) => flip(deck, i * 130));
   hand += 1;
   $$("[data-hand]").forEach((el) => (el.textContent = `· hand ${hand}`));
 }
@@ -197,7 +139,7 @@ $$(".slot").forEach((slot) => {
     if (on) held.add(deck);
     else held.delete(deck);
     lock.setAttribute("aria-pressed", String(on));
-    lock.setAttribute("aria-label", `${on ? "Release" : "Hold"} this ${deck} card`);
+    lock.setAttribute("aria-label", `${on ? "Release" : "Hold"} this ${DECKS[deck].name} card`);
     slot.classList.toggle("held", on);
   });
   tiltable(slot, $(".tilt", slot));
@@ -205,15 +147,26 @@ $$(".slot").forEach((slot) => {
 
 $$("[data-deal]").forEach((btn) => btn.addEventListener("click", dealAll));
 $("[data-deal-top]")?.addEventListener("click", () => setTimeout(dealAll, 650));
-$("[data-copy]")?.addEventListener("click", async () => {
-  const text = $(".draft .scenario").textContent.trim();
-  try { await navigator.clipboard.writeText(text); toast("Scenario copied"); }
-  catch { toast("Copy isn’t available here"); }
-});
 addEventListener("keydown", (e) => {
   if (!e.shiftKey || e.key.toLowerCase() !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
   if (/^(input|textarea|select)$/i.test(e.target.tagName) || e.target.isContentEditable) return;
   dealAll();
+});
+
+// The prompt is written once and mirrored on the drafting template.
+const promptEl = $("#prompt");
+const tplPrompt = $("[data-prompt]");
+const EMPTY_PROMPT = tplPrompt?.textContent ?? "";
+promptEl?.addEventListener("input", () => {
+  const v = promptEl.value.trim();
+  tplPrompt.textContent = v || EMPTY_PROMPT;
+  tplPrompt.classList.toggle("empty", !v);
+});
+
+$("[data-copy]")?.addEventListener("click", async () => {
+  const text = [`Hand ${hand}`, ...handText(), promptEl.value.trim() && `Prompt: ${promptEl.value.trim()}`].filter(Boolean).join("\n");
+  try { await navigator.clipboard.writeText(text); toast("Hand and prompt copied"); }
+  catch { toast("Copy isn’t available here"); }
 });
 
 // ---- save as image / share ----
@@ -234,16 +187,15 @@ $("[data-save]")?.addEventListener("click", async (e) => {
   if (btn.getAttribute("aria-busy")) return;
   btn.setAttribute("aria-busy", "true");
   try {
-    const parts = [...$(".draft .scenario").childNodes].map((n) => ({ t: n.textContent, deck: n.dataset?.say }));
-    const picks = Object.fromEntries(ORDER.map((d) => [d, DECKS[d].cards[state[d]]]));
+    const cards = DECK_ORDER.map((deck) => ({ deck, card: cardOf(deck) }));
     const { makePoster } = await import("./share.js");
-    const blob = await makePoster(parts, picks, hand);
-    await deliver(blob, `pedagogy-playcards-hand-${hand}.png`, "My draft scenario");
+    const blob = await makePoster(cards, promptEl.value.trim(), hand);
+    await deliver(blob, `pedagogy-playcards-hand-${hand}.png`, "My hand and prompt");
   } catch { toast("Couldn’t build the image"); }
   btn.removeAttribute("aria-busy");
 });
 
-// ---- make a card ----
+// ---- make a card (Value cards and new Places, the two the PDF says visitors can add) ----
 const form = $("#maker");
 if (form) {
   const preview = $("#preview");
@@ -252,19 +204,17 @@ if (form) {
   const descEl = form.elements.desc;
   const descField = $("[data-desc]", form);
   const count = $("[data-count]", form);
-  const deckVal = () => form.elements.deck.value;
-  const current = () => ({ t: titleEl.value.trim() || "Your card", d: deckVal() === "action" ? undefined : descEl.value.trim() });
-
-  const render = () => {
-    const deck = deckVal();
-    descField.hidden = deck === "action";
-    count.textContent = descEl.value.length;
-    wrap.dataset.deck = deck;
-    preview.dataset.deck = deck;
-    preview.innerHTML = cardInner(deck, current());
-    if (titleEl.value.trim()) clearError();
-  };
   const err = $("#title-error");
+  const deckVal = () => form.elements.deck.value;
+  const current = () => {
+    const deck = deckVal();
+    const title = titleEl.value.trim() || "Your card";
+    return { deck, title, desc: deck === "value" ? descEl.value.trim() : "" };
+  };
+  const draftCard = () => {
+    const { deck, title, desc } = current();
+    return { mine: true, lines: wrapTitle(title), desc: desc || undefined, art: { type: deck === "value" ? "star" : "pin" } };
+  };
   const clearError = () => { err.hidden = true; titleEl.removeAttribute("aria-invalid"); };
   const needTitle = () => {
     if (titleEl.value.trim()) return false;
@@ -273,6 +223,17 @@ if (form) {
     titleEl.focus();
     return true;
   };
+
+  const render = () => {
+    const { deck } = current();
+    descField.hidden = deck !== "value";
+    count.textContent = descEl.value.length;
+    wrap.dataset.deck = deck;
+    preview.className = `card preview c-${deck} mine`;
+    preview.dataset.deck = deck;
+    preview.innerHTML = faceInner(deck, draftCard(), { eager: true, sizes: "200px" });
+    if (titleEl.value.trim()) clearError();
+  };
   form.addEventListener("input", render);
   tiltable(wrap, preview);
   render();
@@ -280,11 +241,10 @@ if (form) {
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (needTitle()) return;
-    const deck = deckVal();
-    const { t, d } = current();
-    const idx = addToDeck(deck, t, d);
-    if (!mine.some((m) => m.deck === deck && m.t.toLowerCase() === t.toLowerCase())) mine.push({ deck, t, d });
-    else mine.find((m) => m.deck === deck && m.t.toLowerCase() === t.toLowerCase()).d = d;
+    const { deck, title, desc } = current();
+    const idx = addCustom(deck, title, desc);
+    const known = mine.find((m) => m.deck === deck && m.title.toLowerCase() === title.toLowerCase());
+    if (known) known.desc = desc; else mine.push({ deck, title, desc });
     saveMine();
     held.delete(deck);
     const slot = slotOf(deck);
@@ -293,7 +253,7 @@ if (form) {
     preview.classList.remove("bump"); void preview.offsetWidth; preview.classList.add("bump");
     $("#draw").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
     setTimeout(() => flip(deck, 0, idx), reduceMotion ? 0 : 700);
-    toast(`“${t}” is in your hand`);
+    toast(`“${title}” is in your hand`);
   });
 
   $("[data-download-card]", form).addEventListener("click", async (e) => {
@@ -302,15 +262,47 @@ if (form) {
     if (btn.getAttribute("aria-busy")) return;
     btn.setAttribute("aria-busy", "true");
     try {
-      const { t, d } = current();
+      const { deck, title } = current();
       const { makeCardPng } = await import("./share.js");
-      const blob = await makeCardPng(deckVal(), { t, d, mine: true });
-      await deliver(blob, `playcard-${t.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, t);
+      const blob = await makeCardPng(deck, draftCard());
+      await deliver(blob, `playcard-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, title);
     } catch { toast("Couldn’t build the image"); }
     btn.removeAttribute("aria-busy");
   });
 }
 
+// ---- the gallery: filter by deck, open a card larger ----
+const filters = $$("[data-filter]");
+filters.forEach((btn) =>
+  btn.addEventListener("click", () => {
+    const which = btn.dataset.filter;
+    filters.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+    $$(".browse .item").forEach((li) => (li.hidden = which !== "all" && li.dataset.deck !== which));
+  })
+);
+
+const dlg = $("#zoom");
+if (dlg) {
+  const slot = $("#zoom-card");
+  const cap = $("#zoom-cap");
+  let opener = null;
+  $$("[data-zoom]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const [deck, id] = btn.dataset.zoom.split(":");
+      const card = DECKS[deck].cards.find((c) => c.id === id);
+      if (!card) return;
+      opener = btn;
+      slot.innerHTML = cardFace(deck, card, { eager: true, sizes: "340px" });
+      cap.textContent = `${DECKS[deck].noun}: ${titleOf(card)}`;
+      dlg.setAttribute("aria-label", cap.textContent);
+      dlg.showModal();
+    })
+  );
+  const close = () => dlg.close();
+  $("[data-zoom-close]", dlg).addEventListener("click", close);
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) close(); });
+  dlg.addEventListener("close", () => opener?.focus());
+}
 
 // ---- phone menu: full-screen sheet; the page behind is inert while it is open ----
 const bar = $(".bar");
@@ -364,25 +356,27 @@ if (dock && "IntersectionObserver" in window) {
   new IntersectionObserver(([e]) => { rowIn = e.isIntersecting; sync(); }, { rootMargin: "0px 0px -10% 0px" }).observe($(".draft-row"));
 }
 
-// ---- opening: a face-down pile fans out to the table and turns over, card by card ----
+// ---- opening: each deck's own back arrives in a pile, fans out to the table and turns over, card by card ----
 function intro() {
   const root = document.documentElement;
   const slots = $$(".slot");
-  if (reduceMotion || scrollY > 300) return root.classList.add("ready");
+  // On a slow connection the page was already revealed by the head script: skip the opening rather than replay it.
+  if (reduceMotion || scrollY > 300 || root.classList.contains("ready")) return root.classList.add("ready");
   const table = $(".table").getBoundingClientRect();
   const cx = table.left + table.width / 2;
   const cy = table.top + table.height / 2;
+  const mid = (slots.length - 1) / 2;
   slots.forEach((slot, i) => {
     const r = slot.getBoundingClientRect();
-    const dx = cx - (r.left + r.width / 2) + (i - 1.5) * 4;
+    const dx = cx - (r.left + r.width / 2) + (i - mid) * 4;
     const dy = cy - (r.top + r.height / 2) - i * 3;
     slot.style.zIndex = String(10 - i);
     const fly = slot.animate(
       [
-        { transform: `translate(${dx}px, ${dy}px) rotate(${(i - 1.5) * 5}deg) scale(0.9)` },
+        { transform: `translate(${dx}px, ${dy}px) rotate(${(i - mid) * 5}deg) scale(0.9)` },
         { transform: "none" },
       ],
-      { duration: 900, delay: 250 + i * 120, easing: "cubic-bezier(.2,.85,.2,1)", fill: "backwards" }
+      { duration: 600, delay: 80 + i * 60, easing: "cubic-bezier(.2,.85,.2,1)", fill: "backwards" }
     );
     fly.onfinish = () => (slot.style.zIndex = "");
     $(".flipper", slot).animate(
@@ -391,7 +385,7 @@ function intro() {
         { transform: "translateZ(70px) rotateY(270deg) scale(1.05)", offset: 0.55 },
         { transform: "translateZ(0) rotateY(360deg)" },
       ],
-      { duration: 800, delay: 900 + i * 150, easing: "cubic-bezier(.4,0,.2,1)", fill: "backwards" }
+      { duration: 600, delay: 320 + i * 80, easing: "cubic-bezier(.4,0,.2,1)", fill: "backwards" }
     );
   });
   root.classList.add("ready");
