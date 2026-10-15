@@ -81,14 +81,22 @@ function timeChart(t) {
   return `<ul class="cols hist" role="list">${t.bins.map((b) => `<li class="col"><span class="n">${b.count}</span><span class="stack" aria-hidden="true"><i class="fill dark" style="height:${(b.count / max) * 100}%"></i></span><span class="bl">${esc(lab(b))}</span></li>`).join("")}</ul>`;
 }
 
+// Heat colours are mixed in sRGB here so the text colour (white or black, whichever reads better) can be chosen from the real result.
+const LO = [243, 246, 252], HI = [29, 74, 158];
+const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+function heatColours(t) {
+  const c = LO.map((lo, i) => Math.round(lo + (HI[i] - lo) * t));
+  const L = lum(c);
+  return { bg: `rgb(${c.join(",")})`, fg: 1.05 / (L + 0.05) >= (L + 0.05) / 0.05 ? "#fff" : "#000" };
+}
+
 function heat({ rows, cols, cells, max }) {
   const head = `<tr><td></td>${cols.map((c) => `<th scope="col">${esc(c.title)}</th>`).join("")}</tr>`;
   const body = rows.map((r, i) => `<tr><th scope="row">${esc(r.title)}</th>${cells[i].map((n) => {
-    const t = max ? n / max : 0;
-    const bg = `color-mix(in oklab, #1d4a9e ${Math.round(t * 100)}%, #f3f6fc)`;
-    return `<td style="background:${bg};color:${t > 0.5 ? "#fff" : "#10131a"}">${n}</td>`;
+    const { bg, fg } = heatColours(max ? n / max : 0);
+    return `<td style="background:${bg};color:${fg}">${n}</td>`;
   }).join("")}</tr>`).join("");
-  return `<div class="heat-wrap"><table class="heat"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  return `<div class="heat-wrap" role="region" aria-label="Table of counts, scrolls sideways on small screens" tabindex="0"><table class="heat"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
 
 // ---------------------------------------------------------------- render

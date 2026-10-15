@@ -26,7 +26,7 @@ function init() {
   // ------------------------------------------------------------------ helpers
   const hud = (step) => {
     const at = STEPS.findIndex((s) => s.key === step);
-    return `<ol class="gc-hud" aria-label="Progress">${STEPS.map((s, i) => `<li class="${i < at ? "is-done" : ""}${i === at ? " is-on" : ""}"${i === at ? ' aria-current="step"' : ""}><span class="n">${i + 1}</span>${s.label}</li>`).join("")}</ol>`;
+    return `<ol class="gc-hud" aria-label="Progress">${STEPS.map((s, i) => `<li class="${i < at ? "is-done" : ""}${i === at ? " is-on" : ""}"${i === at ? ' aria-current="step"' : ""}><span class="n">${i + 1}</span><span class="l">${s.label}</span></li>`).join("")}</ol>`;
   };
   const filled = () => SLOTS.every((s) => play.picks[s.key]);
   const nextEmpty = () => SLOTS.find((s) => !play.picks[s.key])?.key;
@@ -92,7 +92,7 @@ function init() {
       return `<div class="gc-scr gc-hero">
         <div class="gc-hero-text">
         <p class="gc-kicker">A toolkit for reimagining the future of learning</p>
-        <h3 class="gc-title gc-title-xl" tabindex="-1">How could we reimagine education radically?</h3>
+        <h2 class="gc-title gc-title-xl" tabindex="-1">How could we reimagine education radically?</h2>
         <ol class="gc-how">
           <li><b>Choose a challenge</b> from the Issue cards.</li>
           <li><b>Fill the blanks</b> with a force, a value, a method and a place.</li>
@@ -108,7 +108,7 @@ function init() {
       const pr = ui.profile || {};
       return `<form class="gc-scr gc-you" novalidate>
         <p class="gc-kicker">Before you start</p>
-        <h3 class="gc-title" tabindex="-1">A little about you</h3>
+        <h2 class="gc-title" tabindex="-1">A little about you</h2>
         <p class="gc-sub">It helps the researchers see who is playing. It takes ten seconds.</p>
         <div class="gc-fields">
           <label class="gc-field"><span>Your name <i>(optional)</i></span><input name="name" maxlength="40" autocomplete="name" value="${esc(pr.name)}"></label>
@@ -127,7 +127,7 @@ function init() {
     challenge() {
       const sel = play.challenge && byId(CHALLENGE_DECK, play.challenge);
       return `<div class="gc-scr">${hud("challenge")}
-        <h3 class="gc-title" tabindex="-1">Choose your challenge</h3>
+        <h2 class="gc-title" tabindex="-1">Choose your challenge</h2>
         <p class="gc-sub">Each Issue card names a problem. Pick the one you want to tackle.</p>
         <div class="gc-picks" role="group" aria-label="Challenges">
           ${cardsOf(CHALLENGE_DECK).map((c) => `<button type="button" class="gc-pick" data-act="challenge" data-id="${c.id}" data-nav aria-pressed="${play.challenge === c.id}" aria-label="${esc(DECKS.issue.noun)}: ${esc(titleOf(c))}">${cardFace("issue", c, { tag: "span", sizes: "200px", attrs: ' aria-hidden="true"' })}</button>`).join("")}
@@ -145,7 +145,7 @@ function init() {
         <div class="gc-blanks">
           <div class="gc-side"><p class="gc-tiny">Your challenge</p>${cardFace("issue", c, { tag: "div", sizes: "150px", cls: "gc-mini" })}</div>
           <div class="gc-main">
-            <h3 class="gc-title" tabindex="-1">Fill the blanks</h3>
+            <h2 class="gc-title" tabindex="-1">Fill the blanks</h2>
             <p class="gc-sentence" data-sentence>${sentenceHTML()}</p>
             <p class="gc-ask" data-ask>${askHTML()}</p>
             <div class="gc-tray" data-tray role="group" aria-label="${esc(slot.label)} cards">${trayHTML()}</div>
@@ -158,7 +158,7 @@ function init() {
 
     questions() {
       return `<div class="gc-scr">${hud("questions")}
-        <h3 class="gc-title" tabindex="-1">Questions for your hand</h3>
+        <h2 class="gc-title" tabindex="-1">Questions for your hand</h2>
         <p class="gc-sub">The game wrote these from the cards you chose. <b>${esc(sentenceText())}</b> Answer what you like; every answer is optional.</p>
         <ol class="gc-qs">${play.questions.map((q, i) => `<li class="gc-q"><label for="gq-${i}"><span class="gc-qa">${esc(q.angle)}</span><span class="gc-qt">${esc(q.text)}</span></label><textarea id="gq-${i}" data-q="${i}" rows="2" maxlength="600" placeholder="Your answer">${esc(q.answer ?? "")}</textarea></li>`).join("")}
           <li class="gc-q gc-q-prompt"><label for="gq-prompt"><span class="gc-qa">Your prompt</span><span class="gc-qt">${esc(PROMPT_ASK)}</span></label><textarea id="gq-prompt" data-prompt rows="3" maxlength="300" placeholder="Describe it in a few vivid sentences">${esc(play.prompt)}</textarea></li>
@@ -170,7 +170,7 @@ function init() {
     done() {
       const answered = play.questions.filter((q) => (q.answer || "").trim()).length;
       return `<div class="gc-scr">${hud("done")}
-        <h3 class="gc-title" tabindex="-1">Game complete</h3>
+        <h2 class="gc-title" tabindex="-1">Game complete</h2>
         <p class="gc-sub">${esc(sentenceText())}</p>
         <div class="gc-row" aria-label="Your cards">
           ${[["issue", play.challenge], ...SLOTS.map((s) => [s.deck, play.picks[s.key]])].map(([d, id]) => cardFace(d, byId(d, id), { tag: "div", sizes: "120px", cls: "gc-thumb" })).join("")}
@@ -178,7 +178,7 @@ function init() {
         <p class="gc-detail">You answered ${answered} of ${play.questions.length} questions${play.prompt.trim() ? " and wrote a prompt" : ""}. Your play was recorded for the researchers.</p>
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="save-image" data-nav>Save as image</button><button type="button" class="gc-go" data-act="again" data-nav data-primary>Play again</button></div>
         <form class="gc-mail" novalidate aria-labelledby="mail-h">
-          <h4 class="gc-tiny" id="mail-h">Get your report by email</h4>
+          <h3 class="gc-tiny" id="mail-h">Get your report by email</h3>
           <p class="gc-sub">We will send your cards, your questions and your answers to your inbox.</p>
           <label class="gc-field"><span>Your email address</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" placeholder="you@gmail.com" value="${esc(play.player?.email ?? "")}"></label>
           <label class="gc-check"><input type="checkbox" name="consent"><span>Send me my report, and let the research team keep my email address.</span></label>
