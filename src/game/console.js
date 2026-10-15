@@ -218,6 +218,7 @@ function init() {
     play.picks[slotKey] = id;
     play.pickLog.push({ s: slotKey, c: id, t: Date.now() - t0, ...(auto && { a: 1 }) });
     persist();
+    if (!auto && !reduceMotion) navigator.vibrate?.(12);   // a light tick on phones that support it
     if (silent) return;
     ui.slot = nextEmpty() ?? slotKey;
     refreshBlanks();

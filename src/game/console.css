@@ -211,3 +211,12 @@
   .gc-foot a { min-height: 2.25rem; }
 }
 @media (max-width: 39.99rem) and (max-height: 700px) { .gc-pad { zoom: 0.72; } }
+
+/* Small moments of delight (all switched off by the reduced-motion rule in page.css) */
+.gc-row .gc-thumb { animation: gc-deal-in 0.6s cubic-bezier(.2,.8,.2,1) both; }
+.gc-row .gc-thumb:nth-child(1) { animation-delay: 0.05s; }
+.gc-row .gc-thumb:nth-child(2) { animation-delay: 0.15s; }
+.gc-row .gc-thumb:nth-child(3) { animation-delay: 0.25s; }
+.gc-row .gc-thumb:nth-child(4) { animation-delay: 0.35s; }
+.gc-row .gc-thumb:nth-child(5) { animation-delay: 0.45s; }
+@keyframes gc-deal-in { from { opacity: 0; translate: 0 1.2rem; rotate: -6deg; } }

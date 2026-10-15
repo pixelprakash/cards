@@ -452,6 +452,8 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
 .closing h2 { font: 700 clamp(2.9rem, 14vw, 10rem)/0.94 var(--display); font-stretch: 82%; letter-spacing: -0.03em; max-width: 13ch; }
 .closing h2 em { font-family: var(--serif); font-weight: 400; color: var(--y); }
 .foot { max-width: var(--max); margin: 4.5rem auto 0; padding-top: 1.75rem; border-top: 1px solid rgba(255,255,255,.22); display: grid; gap: 1.75rem; font-size: 0.98rem; color: rgba(255,255,255,.86); }
+.closing-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.25rem; }
+.closing-acts .hero-play { margin-top: 0; }
 .foot-link { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,.22); font-weight: 600; }
 .foot-link a { display: inline-flex; align-items: center; min-height: 2.75rem; color: #fff; text-underline-offset: 0.25em; }
 .foot-link a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
