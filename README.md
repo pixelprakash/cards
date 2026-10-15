@@ -24,10 +24,10 @@ The game's rules live in `src/game/config.js` and `src/game/questions.js`. The m
 ## Researcher sign-in and shared data
 
 `api/session.js` checks the user ID and password on the server and sets a signed, HttpOnly cookie; `api/plays.js` only
-returns plays to a signed-in researcher. The first round uses **temporary credentials** that are set in `api/_auth.js`
-(user ID `Salil`, password `design@123`). Anyone who can read the repository can read them, so before sharing the link
-widely set `RESEARCHER_USER`, `RESEARCHER_PASSWORD` and `SESSION_SECRET` in the Vercel project's environment variables;
-they override the defaults.
+returns plays to a signed-in researcher. The password is never kept in the repository: set `RESEARCHER_PASSWORD`
+(at least 8 characters, required: without it nobody can sign in), `SESSION_SECRET` (a long random string) and optionally
+`RESEARCHER_USER` (default `Salil`) in the Vercel project's environment variables. To try the dashboard locally, start
+the dev server with them set, for example `RESEARCHER_PASSWORD=choose-one npm run dev`.
 
 Every play is always saved in the player's own browser. To collect plays from everyone, add an Upstash Redis database
 (Vercel Marketplace) and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` and

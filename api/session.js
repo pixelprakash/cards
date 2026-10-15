@@ -2,7 +2,7 @@
 //   GET    /api/session   who is signed in      -> 200 { user } or 401
 //   POST   /api/session   { user, password }    -> 200 and a signed, HttpOnly cookie, or 401
 //   DELETE /api/session   sign out
-import { checkCredentials, sessionCookie, clearCookie, currentUser } from "./_auth.js";
+import { checkCredentials, sessionCookie, clearCookie, currentUser, signInEnabled } from "./_auth.js";
 
 const json = (res, status, body) => {
   res.setHeader("cache-control", "no-store");
@@ -17,6 +17,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
+    if (!signInEnabled()) return json(res, 503, { error: "Sign-in is not set up yet. Set RESEARCHER_PASSWORD (at least 8 characters) in the project settings." });
     let body = req.body;
     if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
     const { user = "", password = "" } = body || {};

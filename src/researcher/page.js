@@ -274,7 +274,7 @@ $("#login").addEventListener("submit", async (e) => {
   try {
     const { res, body } = await api("/api/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ user, password }) });
     if (res.ok) { $("#pw").value = ""; await signedIn(); return; }
-    loginMsg.textContent = res.status === 401 ? (body?.error || "The user ID or password is not right.") : "The sign-in service is not available here. Open the deployed site, or run the project with `vercel dev`.";
+    loginMsg.textContent = res.status === 401 ? (body?.error || "The user ID or password is not right.") : res.status === 503 && body?.error ? body.error : "The sign-in service is not available here. Open the deployed site, or run the project with `vercel dev`.";
     $("#pw").select();
   } catch {
     loginMsg.textContent = "Could not reach the sign-in service. Check the connection and try again.";
