@@ -156,6 +156,11 @@ p { text-wrap: pretty; }
 .bar nav a:active { color: var(--y); }
 
 /* ---------- hero ---------- */
+.hero-play { display: inline-flex; align-items: center; gap: 0.6rem; margin-top: clamp(0.9rem, 2.2svh, 1.4rem); min-height: var(--tap); padding: 0 1.4rem; border-radius: 999px; background: var(--y); color: var(--ink); border: 2px solid var(--ink); box-shadow: 0 4px 0 var(--ink); font: 700 0.98rem/1 var(--sans); text-decoration: none; transition: translate 0.15s, box-shadow 0.15s; }
+.hero-play:hover { translate: 0 2px; box-shadow: 0 2px 0 var(--ink); }
+.hero-play:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+.bar nav a.nav-play { color: var(--y); }
+
 .hero { --m: clamp(5rem, 27vw, 13rem); position: relative; overflow-x: clip; padding: 4.75rem var(--gut) 2.25rem; background: var(--paper); }
 .hero-in { max-width: var(--max); margin-inline: auto; }
 .tag { display: flex; align-items: flex-start; gap: 0.75rem; font: 500 0.72rem/1.25 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; }
@@ -447,6 +452,9 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
 .closing h2 { font: 700 clamp(2.9rem, 14vw, 10rem)/0.94 var(--display); font-stretch: 82%; letter-spacing: -0.03em; max-width: 13ch; }
 .closing h2 em { font-family: var(--serif); font-weight: 400; color: var(--y); }
 .foot { max-width: var(--max); margin: 4.5rem auto 0; padding-top: 1.75rem; border-top: 1px solid rgba(255,255,255,.22); display: grid; gap: 1.75rem; font-size: 0.98rem; color: rgba(255,255,255,.86); }
+.foot-link { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,.22); font-weight: 600; }
+.foot-link a { display: inline-flex; align-items: center; min-height: 2.75rem; color: #fff; text-underline-offset: 0.25em; }
+.foot-link a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .foot-h { font: 700 0.7rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: #fff; margin-bottom: 0.8rem; }
 
 /* ====================================================================
@@ -494,6 +502,8 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
   .bar nav a:first-child { border: 0; }
   .bar nav a:active { color: inherit; }
   .bar nav a:hover { background-size: 100% 1.5px; }
+  .bar nav a.nav-play { background: var(--y); color: var(--ink); padding: 0.4rem 0.9rem; margin: -0.4rem 0; border-radius: 999px; }
+  .bar nav a.nav-play:hover { background: #e6dd2a; }
   .dock { display: none; }
 
   /* desktop hero is budgeted by height as well as width, so the whole first move fits one screen */

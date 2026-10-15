@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Researcher view | Pedagogy Playcards</title>
+  <meta name="description" content="How the Pedagogy Playcards game is being played: combinations, choices, timings and answers." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/src/researcher/page.css" />
+  <script type="module" src="/src/researcher/page.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="rbar">
+  <a class="back" href="/play">← Back to the game</a>
+  <p class="rbar-t">Pedagogy Playcards <span>Researcher view</span></p>
+  <button type="button" class="out-btn" id="b-out" hidden>Sign out</button>
+</header>
+
+<main id="main" tabindex="-1">
+  <div class="head">
+    <h1>How the game is being played</h1>
+    <p class="lede">Every play is a hand: one challenge, four chosen cards, the questions the game wrote and what the player answered. This page counts them.</p>
+  </div>
+
+  <section class="gate" id="gate" aria-labelledby="gate-h" hidden>
+    <h2 id="gate-h">Sign in</h2>
+    <p>This page is for the research team. Enter the user ID and password you were given.</p>
+    <form id="login" class="login" novalidate>
+      <label>User ID <input name="user" id="u" autocomplete="username" autocapitalize="off" spellcheck="false" required /></label>
+      <label>Password <input name="password" id="pw" type="password" autocomplete="current-password" required /></label>
+      <button type="submit" class="btn" id="b-login">Sign in</button>
+      <p class="msg" id="loginmsg" role="alert"></p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+  <div id="source" class="source" role="status"></div>
+
+  <section class="tools" aria-label="Data and filters">
+    <form id="filters" class="filters">
+      <label>Period
+        <select name="days">
+          <option value="0">All time</option>
+          <option value="1">Last 24 hours</option>
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+      </label>
+      <label>Challenge
+        <select name="challenge" id="f-challenge"><option value="">All challenges</option></select>
+      </label>
+      <label>Group code
+        <select name="group" id="f-group"><option value="">All groups</option></select>
+      </label>
+      <label>Age
+        <select name="age" id="f-age"><option value="">All ages</option></select>
+      </label>
+      <label>Gender
+        <select name="gender" id="f-gender"><option value="">All genders</option></select>
+      </label>
+    </form>
+    <div class="actions">
+      <button type="button" class="btn" id="b-csv">Download CSV</button>
+      <button type="button" class="btn" id="b-json">Download JSON</button>
+      <button type="button" class="btn ghost" id="b-sample" aria-pressed="false">Preview with sample data</button>
+    </div>
+  </section>
+
+  <div id="out"></div>
+  </div>
+</main>
+
+<footer class="rfoot">
+  <p>Counts about cards and hands use finished plays. The funnel and the totals use every play that started. Each player is a random id kept in their browser, with the age band, gender and optional name they gave before playing, and an optional group code. Written answers can contain personal details, so treat this page and its downloads as research data.</p>
+</footer>
+</body>
+</html>

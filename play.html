@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Play the game | Pedagogy Playcards</title>
+  <meta name="description" content="Pick a challenge, fill in the blanks with cards and answer the questions the game writes for you." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#1d1a16" />
+  <link rel="canonical" href="%SITE_URL%/play" data-abs />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Pedagogy Playcards" />
+  <meta property="og:title" content="Play the Pedagogy Playcards game" />
+  <meta property="og:description" content="Pick a challenge, fill in the blanks with cards and answer the questions the game writes for you." />
+  <meta property="og:url" content="%SITE_URL%/play" data-abs />
+  <meta property="og:image" content="%SITE_URL%/og.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/src/game/page.css" />
+  <script type="module" src="/src/game/page.js"></script>
+</head>
+<body>
+<a class="skip" href="#screen">Skip to the game</a>
+
+<main id="main" class="play" tabindex="-1">
+  <h1 class="vh">Play the Pedagogy Playcards game</h1>
+  <p class="vh">Pick a challenge, fill in the blanks with cards, and answer the questions the game writes for you.</p>
+
+  <div class="console" id="console" data-step="start" role="region" aria-label="Game console">
+    <div class="gc-top">
+      <a class="gc-exit" href="/"><span aria-hidden="true">&larr;</span> Exit</a>
+      <span class="gc-brand"><i class="gc-led" aria-hidden="true"></i>Pedagogy Playcards</span>
+      <span class="gc-tools"><button type="button" class="gc-fs" id="fs" aria-pressed="false" hidden>Full screen</button><span class="gc-vents" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></span>
+    </div>
+    <div class="screen" id="screen"><noscript><p class="gc-sub">The game needs JavaScript. Please turn it on to play.</p></noscript></div>
+    <div class="gc-pad" aria-hidden="true">
+      <div class="gc-dpad">
+        <button type="button" tabindex="-1" data-pad="up"><svg viewBox="0 0 10 10"><path d="M5 1l4 6H1z"/></svg></button>
+        <button type="button" tabindex="-1" data-pad="left"><svg viewBox="0 0 10 10"><path d="M1 5l6-4v8z"/></svg></button>
+        <button type="button" tabindex="-1" data-pad="right"><svg viewBox="0 0 10 10"><path d="M9 5L3 1v8z"/></svg></button>
+        <button type="button" tabindex="-1" data-pad="down"><svg viewBox="0 0 10 10"><path d="M5 9L1 3h8z"/></svg></button>
+      </div>
+      <div class="gc-ab"><button type="button" tabindex="-1" data-pad="back">B</button><button type="button" tabindex="-1" data-pad="ok">A</button></div>
+    </div>
+    <div class="gc-foot"><p class="gc-keys">Arrow keys move &middot; Enter selects &middot; Esc goes back</p><a href="/researcher">Researcher login</a></div>
+  </div>
+</main>
+</body>
+</html>

@@ -11,6 +11,44 @@ npm run preview    # serve dist/ locally
 npm run lint
 ```
 
+## Pages
+
+| Address | What it is |
+| --- | --- |
+| `/` | The story and the decks. "Play" buttons lead to the game. |
+| `/play` | The game console: choose a challenge (an Issue card), fill four blanks with cards, answer the generated questions. |
+| `/researcher` | Sign-in, then the dashboard: hands explored out of 432, challenge and card choices, pairings, timings, answers, CSV/JSON export. Not indexed. |
+
+The game's rules live in `src/game/config.js` and `src/game/questions.js`. The metrics are pure functions in `src/researcher/metrics.js`.
+
+## Researcher sign-in and shared data
+
+`api/session.js` checks the user ID and password on the server and sets a signed, HttpOnly cookie; `api/plays.js` only
+returns plays to a signed-in researcher. The first round uses **temporary credentials** that are set in `api/_auth.js`
+(user ID `Salil`, password `design@123`). Anyone who can read the repository can read them, so before sharing the link
+widely set `RESEARCHER_USER`, `RESEARCHER_PASSWORD` and `SESSION_SECRET` in the Vercel project's environment variables;
+they override the defaults.
+
+Every play is always saved in the player's own browser. To collect plays from everyone, add an Upstash Redis database
+(Vercel Marketplace) and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` and
+`KV_REST_API_TOKEN`). Without it the dashboard shows only the plays saved in the browser you are using.
+Before playing, each player gives an optional name, an age band and a gender (each with "Prefer not to say"), and
+optionally a group code. At the end they can ask for their report by email, with a tick-box agreeing that the research
+team keeps the address. Written answers are saved too. The wording is in `CONSENT` in `src/game/config.js`: have your ethics
+review confirm it (and the handling of players under 18) before collecting from real participants.
+
+### Emailing the report
+
+`api/report.js` builds the report on the server from the saved play and sends it through `api/_mail.js`, using whichever
+of these is configured in the Vercel environment variables (Resend wins if both are set):
+
+- **Gmail, for testing:** `GMAIL_USER` (the Gmail address) and `GMAIL_APP_PASSWORD` (a 16-character app password from
+  <https://myaccount.google.com/apppasswords>, which needs 2-Step Verification on). About 500 emails a day; reports may land in spam.
+- **Resend, for real players:** `RESEND_API_KEY` and `REPORT_FROM` (a sender on a domain verified with Resend).
+
+With neither set the finish screen says plainly that email is not switched on; nothing is reported as sent.
+Each play can be emailed at most three times (this count needs the database).
+
 ## Going live
 
 Build with the public address so canonical, Open Graph, `sitemap.xml` and structured data use absolute URLs:

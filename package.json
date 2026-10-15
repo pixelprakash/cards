@@ -12,5 +12,8 @@
   "devDependencies": {
     "oxlint": "^1.79.0",
     "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "nodemailer": "^10.1.1"
   }
 }
