@@ -87,10 +87,10 @@ async function post(model, { text, schema }, withThinking) {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
         contents: [{ role: "user", parts: [{ text }] }],
-        generationConfig: { responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 1024, ...(withThinking ? { thinkingConfig: { thinkingLevel: thinkingLevel(model) } } : {}) },
+        generationConfig: { responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 2048, ...(withThinking ? { thinkingConfig: { thinkingLevel: thinkingLevel(model) } } : {}) },
       }),
     });
-    if (!res.ok) throw Object.assign(new Error(`gemini ${res.status}`), { status: res.status });
+    if (!res.ok) throw Object.assign(new Error(`${model} ${res.status}`), { status: res.status });
     const data = await res.json();
     const cand = data.candidates?.[0];
     if (!cand || data.promptFeedback?.blockReason) throw new Error("blocked");
@@ -110,7 +110,7 @@ async function callGemini(prompt) {
       catch (e) { if (e.status === 400 && thinkingOk) { thinkingOk = false; out = await post(model, prompt, false); } else throw e; }
       preferred = model;
       return out;
-    } catch (e) { lastErr = e; if (e.status === 404 || e.status === 400) continue; throw e; }   // this model is not available here: try the next
+    } catch (e) { lastErr = e; }   // this model failed here (not available, quota, busy, bad reply): try the next
   }
   throw lastErr || new Error("no model");
 }
@@ -145,7 +145,7 @@ export async function runTask(task, body) {
       const result = {};
       for (const f of prompt.fields) { const v = CHECK[f](out[f]); if (!v) throw new Error(`failed check: ${f}`); result[f] = v; }
       return result;
-    } catch (e) { lastErr = e; if (e.status && e.status < 500 && e.status !== 429) break; }
+    } catch (e) { lastErr = e; }
   }
   throw lastErr || new Error("ai failed");
 }

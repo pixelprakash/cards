@@ -46,7 +46,8 @@ export default async function handler(req, res) {
 
     const result = await runTask(body.task, body);
     return json(res, 200, result);
-  } catch {
-    return json(res, 502, { error: "The AI could not help this time." });
+  } catch (e) {
+    console.error("ai failed:", e?.message);
+    return json(res, 502, { error: "The AI could not help this time.", why: String(e?.message || "").replace(/[^\w .:-]/g, "").slice(0, 80) });
   }
 }
