@@ -23,21 +23,32 @@
   .rhero-fan span { width: clamp(7.5rem, 10.5vw, 11.5rem); margin-left: calc((var(--i) - 2) * clamp(3.4rem, 4.8vw, 5.6rem)); }
 }
 
-/* ---------- deck sheets: the card images stand in for the old drawn faces ---------- */
-.count { font: 700 0.78rem/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; }
-.fan .fcard {
-  --o: calc(var(--i) - (var(--n) - 1) / 2);
-  --off: min(0.5, calc(0.54 / (var(--n) - 1) / 0.46));
-  position: absolute; left: 50%; top: 50%; width: 42%; z-index: calc(var(--i) + 1);
-  transform: translate(-50%, -50%) translateX(calc(var(--o) * var(--off) * 100%)) translateY(calc(var(--o) * var(--o) * 1.5%)) rotate(calc(var(--o) * 6deg));
-  transition: transform 0.55s cubic-bezier(.2, .8, .2, 1);
-  filter: drop-shadow(0 14px 16px rgba(0, 0, 0, 0.28));
-}
-.fan .fcard img { display: block; width: 100%; height: auto; border-radius: 0.5rem; }
+/* ---------- deck sheets: a card rail you can read ---------- */
+.decks .glyph { display: none; }
+.count { display: inline-flex; align-items: baseline; gap: 0.5rem; font: 700 0.8rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; }
+.count b { font: 800 clamp(2.2rem, 5vw, 3.4rem)/0.9 var(--display); letter-spacing: -0.03em; }
+.decks .copy { gap: 1.1rem; }
+
+.rail-wrap { position: relative; min-width: 0; }
+.rail { overflow-x: auto; overflow-y: hidden; padding: 1rem var(--gut) 0.6rem; margin-inline: calc(var(--gut) * -1); scroll-snap-type: x proximity; scroll-padding-inline: var(--gut); scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--st) 55%, transparent) transparent; -webkit-overflow-scrolling: touch; }
+.rail:focus-visible { outline: 3px solid var(--st); outline-offset: -4px; border-radius: 1rem; }
+.rail ul { display: flex; gap: clamp(0.8rem, 1.6vw, 1.3rem); margin: 0; padding: 0; list-style: none; width: max-content; }
+.rcard { width: clamp(8.6rem, 38vw, 10.5rem); scroll-snap-align: start; }
+.rcard img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1050; border-radius: 0.7rem; background: rgba(255, 255, 255, 0.25); box-shadow: 0 16px 26px -14px rgba(0, 0, 0, 0.55); transition: translate 0.25s cubic-bezier(.2, .8, .2, 1); }
+.rcard:hover img { translate: 0 -6px; }
+.rcap { display: block; margin-top: 0.7rem; font: 700 0.88rem/1.25 var(--sans); color: var(--st); overflow-wrap: anywhere; }
+.rback img { box-shadow: 0 16px 26px -14px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(255, 255, 255, 0.45); }
+.rback .rcap { font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.74rem; }
+.rail-nav { display: none; }
 @media (min-width: 62rem) {
-  .sheet:hover .fan .fcard { transform: translate(-50%, -50%) translateX(calc(var(--o) * var(--off) * 108%)) translateY(calc(var(--o) * var(--o) * 1.5%)) rotate(calc(var(--o) * 8deg)); }
+  .decks .sheet-body { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+  .rail { margin-inline: 0; padding-inline: 0.2rem 3rem; scroll-padding-inline: 0.2rem; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
+  .rcard { width: clamp(9.4rem, 13vw, 12.5rem); }
+  .rail-nav { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+  .rail-nav button { all: unset; box-sizing: border-box; display: grid; place-items: center; width: var(--tap); height: var(--tap); border-radius: 50%; border: 2px solid var(--st); color: var(--st); font: 700 1.2rem/1 var(--sans); cursor: pointer; transition: background 0.2s, color 0.2s; }
+  .rail-nav button:hover { background: var(--st); color: var(--c); }
+  .rail-nav button:focus-visible { outline: 3px solid var(--st); outline-offset: 3px; }
 }
-.titles { max-height: 11rem; overflow: hidden; }
 
 /* ---------- gallery ---------- */
 .item img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1050; border-radius: 0.6rem; background: #e8e5dc; box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06), 0 14px 24px -14px rgba(16, 14, 10, 0.45); }

@@ -69,7 +69,7 @@ if (decksEl) {
     decksEl.classList.remove("flow");
     const clipped = sheets.some((s) => {
       const bottom = s.getBoundingClientRect().bottom;
-      return [$(".copy", s), $(".fan", s)].some((el) => el && el.getBoundingClientRect().bottom > bottom - 4);
+      return [$(".copy", s), $(".rail-wrap", s)].some((el) => el && el.getBoundingClientRect().bottom > bottom - 4);
     });
     if (clipped) decksEl.classList.add("flow");
   };
@@ -79,6 +79,30 @@ if (decksEl) {
   document.fonts?.ready.then(fit);
   fit();
 }
+
+// ---- navbar: mark the section being read ----
+const links = $$("#nav a[href^='#']");
+if (links.length && "IntersectionObserver" in window) {
+  const byId = new Map(links.map((a) => [a.getAttribute("href").slice(1), a]));
+  const seen = new Map();
+  const mark = () => {
+    const best = [...seen].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])[0]?.[0];
+    links.forEach((a) => (byId.get(best) === a ? a.setAttribute("aria-current", "location") : a.removeAttribute("aria-current")));
+  };
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => seen.set(e.target.id, e.isIntersecting ? e.intersectionRatio * e.boundingClientRect.height : 0));
+    mark();
+  }, { threshold: [0, 0.15, 0.3, 0.5, 0.75, 1], rootMargin: "-20% 0px -45% 0px" });
+  byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+}
+
+// ---- card rails: the arrow buttons scroll a deck's row of cards ----
+$$("[data-rail]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    const rail = btn.closest(".rail-wrap").querySelector(".rail");
+    rail.scrollBy({ left: Number(btn.dataset.rail) * rail.clientWidth * 0.8, behavior: reduceMotion ? "auto" : "smooth" });
+  })
+);
 
 // ---- the quote: words light up as it scrolls through the viewport ----
 const quote = $("[data-reveal] p");

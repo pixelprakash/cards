@@ -28,11 +28,11 @@ export function exampleHTML() {
 export function sheetsHTML() {
   return DECK_ORDER.map((k, n) => {
     const d = DECKS[k];
-    const sample = d.cards.slice(0, 5);
-    const fan = sample.map((c, i) => `<span class="fcard" style="--i:${i}" aria-hidden="true">${img(c.sm, ' loading="lazy"')}</span>`).join("");
-    const titles = d.cards.map((c) => `<li>${esc(c.name)}</li>`).join("");
     const code = CODE[k];
-    return `<article class="sheet" data-deck="${k}" style="--n:${n}"><div class="tab"><span class="tab-code">${esc(code)}</span>${esc(d.name)}</div><div class="sheet-body"><span class="glyph${code.length > 1 ? " glyph-wide" : ""}" aria-hidden="true">${esc(code)}</span><div class="copy"><h2>${esc(d.name)}</h2><p>${esc(d.blurb)}</p><p class="count">${d.cards.length} cards</p><ul class="titles" aria-label="Cards in this deck">${titles}</ul></div><div class="fan" style="--n:${sample.length}">${fan}</div></div></article>`;
+    const sizes = "(min-width: 62rem) 12.5rem, 9rem";
+    const face = (c) => `<li class="rcard"><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="${sizes}" alt="" width="300" height="525" loading="lazy" decoding="async"><span class="rcap">${esc(c.name)}</span></li>`;
+    const back = `<li class="rcard rback" aria-hidden="true"><img src="${d.coverSm}" alt="" width="300" height="525" loading="lazy" decoding="async"><span class="rcap">The deck</span></li>`;
+    return `<article class="sheet" data-deck="${k}" style="--n:${n}"><div class="tab"><span class="tab-code">${esc(code)}</span>${esc(d.name)}</div><div class="sheet-body"><div class="copy"><h2>${esc(d.name)}</h2><p>${esc(d.blurb)}</p><p class="count"><b>${d.cards.length}</b> cards</p></div><div class="rail-wrap"><div class="rail" role="region" tabindex="0" aria-label="${esc(d.name)}: ${d.cards.length} cards. Scroll sideways."><ul>${back}${d.cards.map(face).join("")}</ul></div><div class="rail-nav"><button type="button" data-rail="-1" aria-label="Show earlier ${esc(d.name)} cards">&larr;</button><button type="button" data-rail="1" aria-label="Show more ${esc(d.name)} cards">&rarr;</button></div></div></div></article>`;
   }).join("");
 }
 

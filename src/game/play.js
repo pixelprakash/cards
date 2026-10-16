@@ -21,7 +21,7 @@ function init() {
   const ui = {
     step: "you", group: "", profile: null, pre: null,
     libDeck: "issue", libMode: "explore", openCard: null, openSlot: null,
-    showDetails: false, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
+    showDetails: false, preview: null, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
     versions: [], vcur: 0, locked: {}, stepAt: Date.now(),
   };
   let play = null;
@@ -65,9 +65,19 @@ function init() {
   }
 
   // ------------------------------------------------------------------ card building blocks
+  // A card tile: the image (sharper on big screens) with the card's name written underneath, so it can always be read.
+  const SIZES = "(min-width: 62rem) 11rem, (min-width: 40rem) 9rem, 30vw";
+  const cardImg = (c) => `<img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="${SIZES}" alt="" width="300" height="525" loading="lazy" decoding="async">`;
   const tile = (deck, c, extra = "") => {
     const inSel = sel()[SLOT_BY_DECK[deck].key].includes(c.id);
-    return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}><img src="${c.sm}" alt="" width="300" height="525" loading="lazy" decoding="async">${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
+    return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}>${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
+  };
+
+  // The reading panel: the card large, with its text in real type.
+  const readCard = (deck, id) => {
+    const c = id && cardOf(deck, id);
+    if (!c) return `<p class="gc-pk-empty">Point at a card, or tap one, to read it here.</p>`;
+    return `<img src="${c.img}" alt="" width="600" height="1050" decoding="async"><div class="gc-pk-text"><p class="gc-kicker">${esc(DECKS[deck].noun)}</p><h4>${esc(c.name)}</h4>${c.desc ? `<p>${esc(c.desc)}</p>` : ""}</div>`;
   };
 
   function comboBar() {
@@ -164,15 +174,18 @@ function init() {
         return `<span class="gc-slot">${chips}${add}</span>`;
       }).join("");
 
-      const strip = SLOTS.flatMap((x) => s[x.key].map((id) => cardOf(x.deck, id))).map((c) => `<li><img src="${c.sm}" alt="" width="300" height="525" loading="lazy"></li>`).join("");
+      const strip = SLOTS.flatMap((x) => s[x.key].map((id) => cardOf(x.deck, id))).map((c) => `<li><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="9rem" alt="" width="300" height="525" loading="lazy"></li>`).join("");
       const open = ui.openSlot && SLOTS.find((x) => x.key === ui.openSlot);
+      const prevId = ui.preview && ui.preview.deck === open?.deck ? ui.preview.id : s[open?.key]?.[0];
       const picker = open ? `<div class="gc-picker" aria-label="${esc(open.ask)}"><h3 class="gc-tiny" id="picker-h" tabindex="-1">${esc(open.ask)}</h3>
-        <ul class="gc-grid gc-grid-sm">${cardsOf(open.deck).map((c) => {
-          const inSel = s[open.key].includes(c.id), lk = ui.locked[key(open.deck, c.id)];
-          const blocked = lk || (!inSel && open.max > 1 && s[open.key].length >= open.max);
-          return `<li><button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="pick" data-deck="${open.deck}" data-id="${c.id}" data-nav aria-pressed="${inSel}"${blocked ? ` aria-disabled="true" title="${lk ? "Unlock this card to replace it" : "Remove one card first"}"` : ""} aria-label="${esc(c.name)}">${`<img src="${c.sm}" alt="" width="300" height="525" loading="lazy">`}${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button></li>`;
-        }).join("")}</ul>
-        <p class="gc-detail" data-detail>Point at a card to read it.</p>
+        <div class="gc-picker-body">
+          <div class="gc-pk-prev" data-preview aria-live="polite">${readCard(open.deck, prevId)}</div>
+          <ul class="gc-grid gc-grid-sm">${cardsOf(open.deck).map((c) => {
+            const inSel = s[open.key].includes(c.id), lk = ui.locked[key(open.deck, c.id)];
+            const blocked = lk || (!inSel && open.max > 1 && s[open.key].length >= open.max);
+            return `<li><button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="pick" data-deck="${open.deck}" data-id="${c.id}" data-nav aria-pressed="${inSel}"${blocked ? ` aria-disabled="true" title="${lk ? "Unlock this card to replace it" : "Remove one card first"}"` : ""} aria-label="${esc(c.name)}${c.desc ? `. ${esc(c.desc)}` : ""}">${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button></li>`;
+          }).join("")}</ul>
+        </div>
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="close-picker" data-nav>Done choosing</button></div></div>` : "";
 
       const vn = ui.versions.length;
@@ -416,11 +429,12 @@ function init() {
     else if (act === "add-card") { const o = ui.openCard; if (addCard(d.deck, d.id)) { ui.openCard = null; render(); announce(`${cardOf(d.deck, d.id).name} added.`); if (o) focusAfter(`.gc-tile[data-id="${o.id}"]`); } }
     else if (act === "remove-card") { const o = ui.openCard; removeCard(d.deck, d.id); ui.openCard = null; render(); announce(`${cardOf(d.deck, d.id).name} removed.`); if (o) focusAfter(`.gc-tile[data-id="${o.id}"]`); }
     else if (act === "to-assemble") go("assemble");
-    else if (act === "slot") { ui.openSlot = d.slot; render(); screen.querySelector("#picker-h")?.focus(); }
+    else if (act === "slot") { ui.openSlot = d.slot; ui.preview = null; render(); screen.querySelector("#picker-h")?.focus(); }
     else if (act === "close-picker") { const k = ui.openSlot; ui.openSlot = null; render(); focusAfter(`[data-act="slot"][data-slot="${k}"]`); }
     else if (act === "pick") {
       const slot = SLOT_BY_DECK[d.deck], inSel = sel()[slot.key].includes(d.id);
-      if (inSel && slot.max === 1) return;
+      ui.preview = { deck: d.deck, id: d.id };
+      if (inSel && slot.max === 1) { const q = screen.querySelector("[data-preview]"); if (q) q.innerHTML = readCard(d.deck, d.id); return; }
       if (inSel) removeCard(d.deck, d.id);
       else if (slot.max === 1) {
         const old = sel()[slot.key][0];
@@ -460,13 +474,13 @@ function init() {
     else if (act === "back") back();
   });
 
-  // reading a card while pointing at or focusing it (picker)
+  // reading a card while pointing at or focusing it (picker): the panel shows it large
   const showDetail = (e) => {
     const b = e.target.closest?.(".gc-picker .gc-tile");
-    const dEl = screen.querySelector("[data-detail]");
-    if (!b || !dEl) return;
-    const c = cardOf(b.dataset.deck, b.dataset.id);
-    if (c) dEl.innerHTML = `<b>${esc(c.name)}.</b> ${esc(c.desc ?? "")}`;
+    const panel = screen.querySelector("[data-preview]");
+    if (!b || !panel) return;
+    ui.preview = { deck: b.dataset.deck, id: b.dataset.id };
+    panel.innerHTML = readCard(b.dataset.deck, b.dataset.id);
   };
   screen.addEventListener("pointerover", showDetail);
   screen.addEventListener("focusin", showDetail);

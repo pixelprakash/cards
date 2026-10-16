@@ -630,3 +630,32 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .quote .w { color: #fff; }
 }
+
+
+/* ====================================================================
+   Navbar refinements: glass bar, wordmark home link, a current-section marker and a clear Play button
+   ==================================================================== */
+.bar nav a.nav-play { color: var(--ink); background: var(--y); border: 0; border-radius: 999px; align-self: flex-start; margin-top: 1.6rem; padding: 0.9rem 1.7rem; font-size: clamp(1.4rem, 6vw, 1.9rem); letter-spacing: -0.01em; display: inline-flex; gap: 0.6rem; align-items: center; min-height: var(--tap); }
+.bar nav a[aria-current="location"] { color: var(--y); }
+.logo { transition: box-shadow 0.25s; }
+.logo-t { display: none; }
+
+@media (min-width: 62rem) {
+  .logo { width: auto; height: var(--tap); padding: 0 1.15rem 0 0.95rem; gap: 0.65rem; display: inline-flex; align-items: center; border-radius: 999px; text-decoration: none; background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+  .logo-t { display: inline; font: 800 0.95rem/1 var(--sans); letter-spacing: -0.01em; }
+  .logo:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  .bar nav {
+    gap: 0.15rem; padding: 0.3rem; align-items: center;
+    background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    box-shadow: 0 0 0 1px rgba(16,14,10,.08), 0 10px 30px -14px rgba(16,14,10,.4);
+    font: 600 0.9rem/1 var(--sans);
+  }
+  .bar nav a { display: inline-flex; align-items: center; min-height: 2.5rem; padding: 0 0.95rem; border-radius: 999px; background: none; transition: background-color 0.2s, color 0.2s; color: var(--ink); }
+  .bar nav a:hover { background: rgba(16,14,10,.07); }
+  .bar nav a[aria-current="location"] { background: var(--ink); color: #fff; }
+  .bar nav a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .bar nav a.nav-play { margin: 0 0 0 0.35rem; padding: 0 1.15rem; min-height: 2.5rem; font-size: inherit; letter-spacing: 0; gap: 0.45rem; background: var(--y); color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); align-self: center; }
+  .bar nav a.nav-play:hover { background: #e6dd2a; }
+}
+@media (prefers-reduced-motion: reduce) { .logo svg { transition: none; } }
