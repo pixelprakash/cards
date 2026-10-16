@@ -525,3 +525,20 @@
 @media (max-width: 39.99rem), (max-height: 520px) { .gc-ch-done { display: none; } }
 @media (min-width: 40rem) and (min-height: 521px) { .gc-ch-donetop { display: none; } }
 @media (max-width: 39.99rem) { .gc-ch-hint { display: none; } .gc-ch-status { margin-top: 0.2rem; } }
+
+
+/* ===== the chooser's action bar: one row, arrows on the left, the card action then Done on the right ===== */
+.gc-ch-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.7rem 1rem; }
+.gc-ch-steps { display: flex; gap: 0.5rem; flex: none; }
+.gc-ch-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; flex: 1; min-width: 0; }
+.gc-ch-actions .gc-ch-choose { flex: 1 1 auto; max-width: 20rem; padding-inline: 1.4rem; }
+.gc-ch-actions .gc-ch-done { flex: none; align-self: auto; min-height: 3rem; padding: 0 1.6rem; background: var(--ink); color: #fff; box-shadow: none; }
+.gc-ch-actions .gc-ch-done:hover { background: #2b271f; }
+.gc-ch-choose.is-remove { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
+.gc-ch-choose.is-remove:hover { background: #f3f1ea; }
+@media (max-width: 39.99rem) {
+  .gc-ch-nav { flex-wrap: nowrap; gap: 0.5rem; }
+  .gc-ch-steps { gap: 0.4rem; }
+  .gc-ch-step { width: 2.8rem; height: 2.8rem; }
+  .gc-ch-actions .gc-ch-choose { max-width: none; padding-inline: 0.6rem; font-size: 0.95rem; }
+}

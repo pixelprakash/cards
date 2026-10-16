@@ -125,11 +125,15 @@ function init() {
         ${note ? `<p class="gc-fine">${esc(note)}</p>` : ""}
         ${on ? `<button type="button" class="gc-keep" data-act="ch-keep" data-nav aria-pressed="${locked}">${locked ? "Kept when you shuffle" : "Keep this card when I shuffle"}</button>` : ""}
         <div class="gc-ch-nav">
-          <button type="button" class="gc-ch-step" data-act="ch-prev" data-nav aria-label="Previous card">&larr;</button>
-          <button type="button" class="gc-go gc-ch-choose" data-act="ch-choose" data-nav${slot.max > 1 ? "" : " data-primary"}${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
-          <button type="button" class="gc-ch-step" data-act="ch-next" data-nav aria-label="Next card">&rarr;</button>
+          <div class="gc-ch-steps" role="group" aria-label="Browse the deck">
+            <button type="button" class="gc-ch-step" data-act="ch-prev" data-nav aria-label="Previous card">&larr;</button>
+            <button type="button" class="gc-ch-step" data-act="ch-next" data-nav aria-label="Next card">&rarr;</button>
+          </div>
+          <div class="gc-ch-actions">
+            <button type="button" class="gc-go gc-ch-choose${on ? " is-remove" : ""}" data-act="ch-choose" data-nav${slot.max > 1 ? "" : " data-primary"}${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
+            ${slot.max > 1 ? `<button type="button" class="gc-go gc-ch-done" data-act="ch-done" data-nav data-primary>Done${chosen.length ? ` &middot; ${chosen.length} chosen` : ""}</button>` : ""}
+          </div>
         </div>
-        ${slot.max > 1 ? `<button type="button" class="gc-go gc-ch-done" data-act="ch-done" data-nav data-primary>Done${chosen.length ? ` &middot; ${chosen.length} chosen` : ""}</button>` : ""}
       </div>`;
   }
   function chooserHTML() {
