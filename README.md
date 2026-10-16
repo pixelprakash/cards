@@ -80,25 +80,16 @@ Without either, the canonical and `og:url` tags are left out and `og:image` stay
 
 ## Cards
 
-Every card is a real printed card, transcribed from photographs of the physical decks (Value Cards, Places and Spaces,
-12 Forces of Change, Methods of Learning, Issue cards). `src/cards-data.js` holds the exact wording; `src/cards.css`
-rebuilds each deck's design in CSS; `src/share.js` redraws the same designs on a canvas for the saved images.
-The build writes every card's text into the static HTML, so it is all crawlable.
-
-- Only cards whose full face was visible in the photos are included. To add a card, add an entry to `DECKS` in
-  `src/cards-data.js` and its artwork to `public/cards/art/`.
-- The illustrations are cropped from the photographs (see `public/cards/art/`). Swap in the original artwork files
-  for sharper results; keep the same file names.
-- The deck logos are approximated with open fonts (Fredoka, Josefin Sans, Anton, Yellowtail, Bangers, Oswald).
+The game and the Research Background page use the designer's final card faces (see **The game** above). The build writes every card's name into the static HTML of `/research`, so it is all crawlable. To change a card, replace its file in `src-cards/` (or edit its entry in `scripts/build-cards.py`) and run `python3 scripts/build-cards.py`.
 
 ## Assets
 
 - **Fonts** are self-hosted in `public/fonts`, subset to the glyphs the site uses. To regenerate them from
-  `src-fonts/`: `pip install fonttools brotli && ./scripts/subset-fonts.sh`.
+  `src-fonts/`: `pip install fonttools brotli && ./scripts/subset-fonts.sh`. (Bricolage Grotesque and Newsreader are the ones in use; the older card-design fonts are no longer loaded.)
 - **Box photos** are in `public/img` as WebP at 640, 1100, 1600 and 2200 px, with a JPG fallback.
 - `public/og.jpg` is the 1200×630 link-preview image.
 
 ## Content
 
 All copy follows the project's source documents (the Pedagogy Playcards PDF, the research-assessment article, and the
-card photographs). The random draw in the hero is a demo, not the rules of the game.
+card faces supplied by the designers and the October brief.

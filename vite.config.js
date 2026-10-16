@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import { heroSlotsHTML, sheetsHTML, browseHTML } from './src/cards-data.js'
+import { heroHTML, sheetsHTML, galleryHTML, exampleHTML } from './src/research-html.js'
 
 // Set SITE_URL (no trailing slash) when building for production so canonical, Open Graph and
 // sitemap URLs are absolute:   SITE_URL=https://example.com npm run build
@@ -91,9 +91,10 @@ function playcardsSite() {
         // Every card is written into the static HTML from the shared card data, so all card text is crawlable.
         let out = html
         {
-          const gallery = browseHTML()
+          const gallery = galleryHTML()
           out = out
-            .replace('<!--@hero-slots-->', heroSlotsHTML())
+            .replace('<!--@hero-->', heroHTML())
+            .replace('<!--@example-->', exampleHTML())
             .replace('<!--@sheets-->', sheetsHTML())
             .replace('<!--@chips-->', gallery.chips)
             .replace('<!--@items-->', gallery.items)

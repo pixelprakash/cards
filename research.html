@@ -30,7 +30,6 @@
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="preload" href="/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/fonts/newsreader-latin-italic.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/src/style.css" />
   <script>document.documentElement.classList.add("js");setTimeout(function(){document.documentElement.classList.add("ready")},900)</script>
 </head>
@@ -61,52 +60,22 @@
 
 <main id="main" tabindex="-1">
 
-<!-- ============ HERO / the first hand ============ -->
-<section class="hero" aria-labelledby="title">
-  <div class="hero-in">
-    <p class="tag tag-top">
-      <svg class="br" viewBox="0 0 64 64" aria-hidden="true"><path d="M60 4H18Q4 4 4 18V58" fill="none" stroke="currentColor" stroke-width="1.2"/><use href="#star" x="52" y="-4" width="16" height="16"/><use href="#star" x="-4" y="52" width="16" height="16"/></svg>
-      <span>Step into a possibility space of learning.</span>
-    </p>
-
-    <div class="hero-grid">
-      <div class="lockup">
-        <h1 id="title" class="mark"><span class="vh">Pedagogy Playcards</span>
-          <span class="ln" aria-hidden="true"><span>Peda</span></span>
-          <span class="ln" aria-hidden="true"><span>gogy</span></span>
-        </h1>
-        <p class="sub" aria-hidden="true">Playcards</p>
-        <p class="strap">A toolkit for <br>reimagining the <br>future of learning</p>
-        <a class="hero-play" href="/play">Play the game <span aria-hidden="true">&rarr;</span></a>
-      </div>
-
-      <div class="deal" id="draw">
-        <div class="table">
-          <div class="cards" id="cards"><!--@hero-slots--></div>
-        </div>
-        <p class="hint"><span class="hint-touch">A demo draw: one card from each deck. Tap a card to flip it; lock the ones you like.</span><span class="hint-key">A demo draw: one card from each deck. Click a card to flip it, pin the ones you like, press <kbd>Shift</kbd> + <kbd>D</kbd> to deal.</span></p>
-
-        <div class="draft">
-          <label class="draft-label" for="prompt">Your prompt <span class="hand" data-hand>· hand 1</span></label>
-          <textarea id="prompt" class="prompt-field" rows="2" maxlength="240" placeholder="Write a concise, vivid description of the learning environment this hand suggests."></textarea>
-          <div class="draft-row">
-            <button class="btn" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
-            <button class="btn btn-ghost" type="button" data-copy><svg aria-hidden="true"><use href="#copy"/></svg><span class="lbl">Copy</span></button>
-            <button class="btn btn-ghost" type="button" data-save><svg aria-hidden="true"><use href="#img"/></svg><span class="lbl">Save image</span></button>
-          </div>
-        </div>
-      </div>
+<!-- ============ HERO ============ -->
+<section class="rhero" aria-labelledby="title">
+  <div class="rhero-copy">
+    <p class="kicker">Research background</p>
+    <h1 id="title">Pedagogy <em>Playcards</em></h1>
+    <p class="rhero-lede">A card-based speculative tool for exploring alternative futures in higher education.</p>
+    <div class="rhero-acts">
+      <a class="hero-play" href="/play">Play the game <span aria-hidden="true">&rarr;</span></a>
+      <a class="btn btn-ghost" href="#premise">Read the background <span aria-hidden="true">&darr;</span></a>
     </div>
-
-    <p class="tag tag-bot">
-      <svg class="br" viewBox="0 0 64 64" aria-hidden="true"><path d="M4 4V46Q4 60 18 60H60" fill="none" stroke="currentColor" stroke-width="1.2"/><use href="#star" x="-4" y="-4" width="16" height="16"/><use href="#star" x="52" y="52" width="16" height="16"/></svg>
-      <span>How could we reimagine education radically?</span>
-    </p>
   </div>
+  <div class="rhero-fan" aria-hidden="true"><!--@hero--></div>
 </section>
 
 <!-- ============ PREMISE ============ -->
-<section class="premise">
+<section class="premise" id="premise">
   <div class="premise-in">
     <blockquote class="quote" data-reveal>
       <p>The future exists first in imagination, then in will, then in reality.</p>
@@ -139,8 +108,8 @@
 <!-- ============ THE GALLERY ============ -->
 <section class="browse" id="cards-all" aria-labelledby="browse-h">
   <div class="browse-in">
-    <h2 id="browse-h">Every card we have, face and back.</h2>
-    <p class="browse-lede">Seventeen cards from five decks, photographed from the printed set. Each deck holds more cards than are shown here. Open any card to read it larger.</p>
+    <h2 id="browse-h">Every card, face and back.</h2>
+    <p class="browse-lede">The five decks as printed: 73 cards to play with, and the back of each deck. Open any card to read it larger.</p>
     <div class="filters" role="group" aria-label="Filter by deck"><!--@chips--></div>
     <ul class="grid" id="grid"><!--@items--></ul>
     <h3 class="backs-title">The back of each deck</h3>
@@ -153,26 +122,15 @@
 <section class="method" id="method">
   <div class="method-in">
     <div class="method-copy">
-      <h2>Combine on the drafting template.</h2>
+      <h2>Combine the cards into <em>a sentence.</em></h2>
       <p>By combining the elements on a drafting template, participants generate <strong>draft narratives</strong> that explore alternative futures. Prompts turn the combination into a concise, vivid description of a future learning environment.</p>
       <p>The outcome is a <strong>draft scenario</strong>, expected to act as a precursor to scenario building. Card play operates at the <strong>intersection of freedom and order</strong>: moments of spontaneity coexist with an underlying structure, and implicit rules guide play.</p>
-      <button class="btn btn-ghost" type="button" data-deal><svg aria-hidden="true"><use href="#redo"/></svg>Deal a new hand</button>
     </div>
 
-    <div class="template" role="group" aria-label="Drafting template, filled with your current hand">
-      <div class="tpl-head"><span>Draft scenario</span><svg aria-hidden="true"><use href="#star"/></svg></div>
-      <div class="tpl-slots">
-        <div class="tpl-slot" data-deck="issue"><small>Issue</small><b data-name="issue">Curricular Problems</b></div>
-        <div class="tpl-slot" data-deck="forces"><small>Force</small><b data-name="forces">Flowing</b></div>
-        <div class="tpl-slot" data-deck="value"><small>Value</small><b data-name="value">Lifelong Learning</b></div>
-        <div class="tpl-slot" data-deck="methods"><small>Method</small><b data-name="methods">Experiential Learning</b></div>
-        <div class="tpl-slot" data-deck="places"><small>Place</small><b data-name="places">Museum / Gallery</b></div>
-      </div>
-      <div class="tpl-prompt">
-        <small>Prompt</small>
-        <p data-prompt class="empty">Write your prompt in the hand above and it appears here.</p>
-      </div>
-    </div>
+    <figure class="example">
+      <figcaption class="ex-cap">An example hand, read as one sentence</figcaption>
+      <!--@example-->
+    </figure>
   </div>
 </section>
 
@@ -245,7 +203,6 @@
     <h2>How could we reimagine education <em>radically?</em></h2>
     <div class="closing-acts">
       <a class="hero-play" href="/play">Play the game <span aria-hidden="true">&rarr;</span></a>
-      <a class="btn btn-light" href="#draw" data-deal-top>Deal a hand and start</a>
     </div>
   </div>
 
@@ -253,7 +210,7 @@
 
 </main>
 
-<dialog class="zoom-dialog" id="zoom" aria-label="Card"><div class="zoom-box"><button class="zoom-close" type="button" aria-label="Close" data-zoom-close>&times;</button><div id="zoom-card"></div><p class="zoom-cap" id="zoom-cap"></p></div></dialog>
+<dialog class="zoom-dialog" id="zoom" aria-label="Card"><div class="zoom-box"><button class="zoom-close" type="button" aria-label="Close" data-zoom-close>&times;</button><img id="zoom-img" alt="" width="600" height="1050"><p class="zoom-cap" id="zoom-cap"></p></div></dialog>
 
 <footer class="site-foot"><div class="foot">
     <div>
@@ -271,10 +228,9 @@
     <p class="foot-link"><a href="/play">Play the game</a><a href="/researcher">Researcher login</a></p>
   </div></footer>
 
-<button class="dock" type="button" data-deal aria-label="Deal a new hand"><svg aria-hidden="true"><use href="#redo"/></svg></button>
 <p class="vh" id="sr" role="status" aria-live="polite"></p>
 <p class="toast" role="status" aria-live="polite"></p>
 
-<script type="module" src="/src/site.js"></script>
+<script type="module" src="/src/research-page.js"></script>
 </body>
 </html>
