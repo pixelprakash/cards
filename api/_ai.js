@@ -3,7 +3,7 @@
 // falls back to its built-in rule-based wording.
 //
 //   GEMINI_API_KEY   required (Google AI Studio key; also accepted as GOOGLE_API_KEY)
-//   GEMINI_MODEL     optional, default gemini-3.8-flash
+//   GEMINI_MODEL     optional: one model id, or a comma-separated list tried in order (default gemini-3.5-flash-lite,gemini-3.8-flash)
 //   GEMINI_BASE_URL  optional, default https://generativelanguage.googleapis.com/v1beta (used for testing)
 
 import { DECKS, cardOf } from "../src/game/cards.js";
@@ -67,9 +67,15 @@ export function buildPrompt(task, body) {
   };
 }
 
-async function callGemini({ text, schema }) {
+// Speed: the lite model first (it thinks the least), the next model if the first is not available to this key.
+// Thinking is kept minimal; if the API rejects that setting we stop sending it.
+const MODELS = () => (process.env.GEMINI_MODEL || "gemini-3.5-flash-lite,gemini-3.8-flash").split(",").map((m) => m.trim()).filter(Boolean);
+const thinkingLevel = (m) => (/flash-lite/.test(m) ? "minimal" : "low");
+let thinkingOk = true;
+let preferred = "";   // the model that last worked on this server instance
+
+async function post(model, { text, schema }, withThinking) {
   const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
   const base = (process.env.GEMINI_BASE_URL || "https://generativelanguage.googleapis.com/v1beta").replace(/\/$/, "");
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 20000);
@@ -81,7 +87,7 @@ async function callGemini({ text, schema }) {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
         contents: [{ role: "user", parts: [{ text }] }],
-        generationConfig: { responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 2048 },
+        generationConfig: { responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: 1024, ...(withThinking ? { thinkingConfig: { thinkingLevel: thinkingLevel(model) } } : {}) },
       }),
     });
     if (!res.ok) throw Object.assign(new Error(`gemini ${res.status}`), { status: res.status });
@@ -91,6 +97,22 @@ async function callGemini({ text, schema }) {
     const raw = (cand.content?.parts || []).map((p) => p.text || "").join("").replace(/^```(?:json)?|```$/g, "").trim();
     return JSON.parse(raw);
   } finally { clearTimeout(timer); }
+}
+
+async function callGemini(prompt) {
+  const list = MODELS();
+  const order = preferred && list.includes(preferred) ? [preferred, ...list.filter((m) => m !== preferred)] : list;
+  let lastErr;
+  for (const model of order) {
+    try {
+      let out;
+      try { out = await post(model, prompt, thinkingOk); }
+      catch (e) { if (e.status === 400 && thinkingOk) { thinkingOk = false; out = await post(model, prompt, false); } else throw e; }
+      preferred = model;
+      return out;
+    } catch (e) { lastErr = e; if (e.status === 404 || e.status === 400) continue; throw e; }   // this model is not available here: try the next
+  }
+  throw lastErr || new Error("no model");
 }
 
 // ---- checks on what came back

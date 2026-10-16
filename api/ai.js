@@ -9,7 +9,7 @@ import { SLOTS } from "../src/game/config.js";
 
 const json = (res, status, body) => { res.setHeader("cache-control", "no-store"); res.status(status).json(body); };
 
-const PER_IP_HOUR = Number(process.env.AI_PER_IP_HOUR || 40);
+const PER_IP_HOUR = Number(process.env.AI_PER_IP_HOUR || 120);
 const PER_DAY = Number(process.env.AI_DAILY_LIMIT || 1000);
 const mem = new Map();   // used only when there is no database
 

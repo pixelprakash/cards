@@ -22,7 +22,7 @@ function init() {
   const ui = {
     step: "you", group: "", profile: null, pre: null,
     libDeck: "issue", libMode: "explore", choose: null, chooseOpener: "", choseNow: false,
-    showDetails: false, moreTools: false, ai: null, aiBusy: false, aiFields: new Set(), aiN: { title: 0, idea: 0, difference: 0, all: 0 }, clearAI: "", clearAIKey: "", clearN: 0, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
+    showDetails: false, moreTools: false, ai: null, aiBusy: false, aiFields: new Set(), aiN: { title: 0, idea: 0, difference: 0, all: 0, pool: 0 }, clearAI: "", clearAIKey: "", clearN: 0, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
     versions: [], vcur: 0, locked: {}, stepAt: Date.now(),
   };
   let play = null;
@@ -386,7 +386,7 @@ function init() {
     t0 = Date.now();
     ui.versions = [copySel(sel())]; ui.vcur = 0; ui.locked = {}; ui.clarity = 0; ui.groups = 1; ui.nudges = {};
     ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.choose = null; ui.showDetails = false; ui.moreTools = false;
-    ui.aiFields = new Set(); ui.aiN = { title: 0, idea: 0, difference: 0, all: 0 }; ui.clearAI = ""; ui.clearN = 0; ui.aiBusy = false;
+    ui.aiFields = new Set(); ui.aiN = { title: 0, idea: 0, difference: 0, all: 0, pool: 0 }; ui.pool = null; aiCache.clear(); ui.clearAI = ""; ui.clearN = 0; ui.aiBusy = false;
     persist();
     go("discover");
   }
@@ -452,15 +452,37 @@ function init() {
 
   // ------------------------------------------------------------------ AI wording help (Gemini, through /api/ai)
   // Always optional: if it is off, slow or fails, the game's own wording is used and nothing is lost.
-  async function askAI(body) {
+  // Answers are pre-generated in the background for what the player is likely to do next, so the press feels instant.
+  const aiCache = new Map();   // request -> promise of its result
+  const aiPayload = (extra) => ({ picks: sel(), answers: play.answers, details: play.details, nudges: Object.entries(ui.nudges).map(([i, a]) => ({ text: NUDGES[i], answer: a })), ...extra });
+  const aiCtx = () => JSON.stringify([sel(), play.answers, play.details, Object.values(ui.nudges)]);
+  function fetchAI(payload) {
+    return fetch("/api/ai", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) })
+      .then((res) => { if (res.status === 503) { ui.ai = false; return null; } return res.ok ? res.json() : null; })
+      .catch(() => null);
+  }
+  async function askAI(extra) {
     if (ui.ai === false) return null;
-    try {
-      const res = await fetch("/api/ai", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ picks: sel(), answers: play.answers, details: play.details, nudges: Object.entries(ui.nudges).map(([i, a]) => ({ text: NUDGES[i], answer: a })), ...body }) });
-      if (res.status === 503) { ui.ai = false; return null; }
-      if (!res.ok) return null;
-      play.stats.ai = (play.stats.ai || 0) + 1;
-      return await res.json();
-    } catch { return null; }
+    const payload = aiPayload(extra), key = JSON.stringify(payload);
+    const cached = aiCache.get(key);
+    aiCache.delete(key);
+    let out = cached ? await cached : null;
+    if (!out && ui.ai !== false) out = await fetchAI(payload);
+    if (out) play.stats.ai = (play.stats.ai || 0) + 1;
+    return out;
+  }
+  function prefetchAI(extra) {
+    if (ui.ai === false || !play || !hasMandatory(sel())) return;
+    const payload = aiPayload(extra), key = JSON.stringify(payload);
+    if (aiCache.has(key)) return;
+    if (aiCache.size >= 6) aiCache.delete(aiCache.keys().next().value);
+    aiCache.set(key, fetchAI(payload).then((r) => { if (!r) aiCache.delete(key); return r; }));
+  }
+  // A ready-made set of title / idea / difference for the next "Regenerate", refreshed after each use.
+  function refreshPool() {
+    if (ui.ai === false || !hasMandatory(sel())) return;
+    ui.aiN.pool += 1;
+    ui.pool = { ctx: aiCtx(), promise: fetchAI(aiPayload({ task: "describe", field: null, keep: {}, avoid: "", n: 10 + ui.aiN.pool })) };
   }
   const AI_DOWN = "AI help is not available just now, so the game wrote this wording.";
   const aiStatus = (msg) => { const el = screen.querySelector("#ai-status"); if (el) el.textContent = msg; };
@@ -470,16 +492,17 @@ function init() {
     play.stats.clarified += 1;
     const key0 = JSON.stringify(sel());
     if (ui.ai !== false && !ui.aiBusy) {
-      const btn = screen.querySelector('[data-act="clarify"]');
-      if (btn) btn.textContent = "Making it clearer…";
-      announce("Making it clearer.");
       setBusy(true);
+      const wait = setTimeout(() => { const b = screen.querySelector('[data-act="clarify"]'); if (b) b.textContent = "Making it clearer…"; }, 250);
       const out = await askAI({ task: "clarify", n: ui.clearN });
+      clearTimeout(wait);
       setBusy(false);
       if (ui.step !== "assemble") return;
       if (out?.sentence && JSON.stringify(sel()) === key0) {
         ui.clearAI = out.sentence; ui.clearAIKey = key0; ui.clearN += 1; ui.clarity = Math.max(1, ui.clarity);
-        commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed."); return;
+        commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed.");
+        prefetchAI({ task: "clarify", n: ui.clearN });   // the next version is ready before it is asked for
+        return;
       }
     }
     ui.clearAI = ""; ui.clarity = (ui.clarity % CLEAR_VARIANTS) + 1;
@@ -491,9 +514,19 @@ function init() {
     if (ui.ai === false || ui.aiBusy) return false;
     const fields = field ? [field] : FIELDS.filter((f) => !play.edited.includes(f));
     if (!fields.length) return false;
-    setBusy(true); aiStatus("Writing with AI help…");
-    const keep = Object.fromEntries(FIELDS.filter((f) => !fields.includes(f)).map((f) => [f, play.scenario[f]]));
-    const out = await askAI({ task: "describe", field, keep, avoid: field ? play.scenario[field] : "", n: user ? ++ui.aiN[field || "all"] : 0 });
+    setBusy(true);
+    const note = setTimeout(() => aiStatus("Writing with AI help…"), 250);
+    let out = null;
+    if (user && ui.pool && ui.pool.ctx === aiCtx()) {   // a ready-made set: instant
+      const pool = ui.pool; ui.pool = null;
+      const got = await pool.promise;
+      if (got && fields.every((f) => got[f])) { out = got; play.stats.ai = (play.stats.ai || 0) + 1; }
+    }
+    if (!out) {
+      const keep = Object.fromEntries(FIELDS.filter((f) => !fields.includes(f)).map((f) => [f, play.scenario[f]]));
+      out = await askAI({ task: "describe", field, keep, avoid: field ? play.scenario[field] : "", n: user ? ++ui.aiN[field || "all"] : 0 });
+    }
+    clearTimeout(note);
     setBusy(false);
     if (ui.step !== "describe") return false;
     if (!out) { if (!user) aiStatus(""); return false; }
@@ -508,6 +541,7 @@ function init() {
     aiStatus("Written with AI help. Change anything you like.");
     play.aiFields = [...ui.aiFields]; persist();
     announce("The AI wrote new wording.");
+    refreshPool();   // the next Regenerate is prepared while you read this one
     return true;
   }
 
@@ -619,9 +653,9 @@ function init() {
     else if (act === "unclarify") { ui.clarity = 0; ui.clearAI = ""; commit(); render(); focusAfter('[data-act="clarify"]'); }
     else if (act === "version") { if (guideToMissing()) return; newVersionFrom(randomHand(sel(), ui.locked, Math.random, { fresh: true })); render(); focusAfter('[data-act="version"]'); announce(`Version ${ui.vcur + 1}. Your earlier version is kept.`); }
     else if (act === "ver-prev" || act === "ver-next") { ui.vcur += act === "ver-next" ? 1 : -1; play.picks = copySel(ui.versions[ui.vcur]); commit(); render(); focusAfter(`[data-act="${act}"]`); announce(`Version ${ui.vcur + 1} of ${ui.versions.length}.`); }
-    else if (act === "more-tools") { ui.moreTools = !ui.moreTools; render(); focusAfter('[data-act="more-tools"]'); }
+    else if (act === "more-tools") { ui.moreTools = !ui.moreTools; render(); focusAfter('[data-act="more-tools"]'); if (ui.moreTools) prefetchAI({ task: "clarify", n: ui.clearN }); }
     else if (act === "details") { ui.showDetails = !ui.showDetails; render(); if (ui.showDetails) focusAfter("[data-details]"); }
-    else if (act === "continue") { if (guideToMissing()) return; play.sentence = sentence(); commit(); go("imagine"); }
+    else if (act === "continue") { if (guideToMissing()) return; play.sentence = sentence(); commit(); go("imagine"); prefetchAI({ task: "describe", field: null, keep: {}, avoid: "", n: 0 }); }
     else if (act === "more") { ui.groups = Math.min(3, ui.groups + 1); render(); focusAfter(`.gc-group:nth-of-type(${ui.groups}) textarea`); }
     else if (act === "nudge") { const i = +d.i; if (i in ui.nudges) delete ui.nudges[i]; else ui.nudges[i] = ""; render(); focusAfter(i in ui.nudges ? `[data-nudge="${i}"]` : `[data-act="nudge"][data-i="${i}"]`); }
     else if (act === "create") toDescribe();
