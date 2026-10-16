@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     if (body.consent !== true) return json(res, 400, { error: "Please tick the box to agree." });
 
     const play = sanitise(body.play);
-    if (!play || play.status !== "completed") return json(res, 400, { error: "Finish the game first." });
+    if (!play || play.v !== 2 || play.status !== "completed") return json(res, 400, { error: "Finish the game first." });
     play.player.email = email;
 
     // keep the address, and count sends so one play cannot be used to mail someone over and over

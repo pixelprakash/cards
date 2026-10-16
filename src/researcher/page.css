@@ -91,6 +91,8 @@ select, input[type="password"] { font: 500 1rem/1.2 var(--sans); min-height: 2.7
 .grid { margin-top: 0.75rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
 .panel { padding: 1.25rem 1.1rem 1.35rem; background: #fff; border-radius: 1rem; border: 1.5px solid var(--line); min-width: 0; }
 .panel h2 { font: 800 1.25rem/1.15 var(--sans); letter-spacing: -0.01em; }
+.panel h3 small { display: block; font-weight: 500; color: var(--ink-2); font-size: 0.82rem; line-height: 1.35; }
+.panel h3.q { margin-bottom: 0.6rem; }
 .panel h3 { font: 700 0.95rem/1.2 var(--sans); margin-bottom: 0.5rem; }
 .hint { margin-top: 0.3rem; font-size: 0.9rem; color: var(--ink-2); }
 .empty { color: var(--ink-2); margin-top: 0.75rem; }

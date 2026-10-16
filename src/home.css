@@ -1,0 +1,79 @@
+/* The home page: two choices, Play Space and Research Background. Mobile-first. */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal; font-weight: 500 800; font-stretch: 75% 100%; font-display: swap;
+  src: url("/fonts/bricolage-latin.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-201D, U+2022, U+2026;
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url("/fonts/newsreader-latin.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-201D, U+2022, U+2026;
+}
+@font-face {
+  font-family: "Newsreader";
+  font-style: italic; font-weight: 400 700; font-display: swap;
+  src: url("/fonts/newsreader-latin-italic.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+00A0-00FF, U+2013-2014, U+2018-201D, U+2022, U+2026;
+}
+
+:root {
+  color-scheme: light;
+  --paper: #fff;
+  --paper-2: #f3f1ea;
+  --ink: #100e0a;
+  --ink-2: #433e33;
+  --y: #efe735;
+  --sans: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --gut: clamp(1.25rem, 4vw, 3.5rem);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; background: var(--paper-2); color: var(--ink); font: 400 clamp(1.125rem, 1.06rem + 0.22vw, 1.25rem)/1.55 var(--serif); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+h1, p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
+main:focus { outline: none; }
+.skip { position: fixed; z-index: 10; left: 1rem; top: 0.75rem; padding: 0.8rem 1.1rem; border-radius: 999px; background: var(--ink); color: #fff; font: 700 0.95rem/1 var(--sans); text-decoration: none; translate: 0 -200%; }
+.skip:focus { translate: 0 0; outline: 3px solid var(--y); outline-offset: 2px; }
+
+.top { padding: 1rem var(--gut) 0; }
+.brand { display: inline-flex; align-items: center; gap: 0.65rem; min-height: 2.9rem; font: 800 1.05rem/1 var(--sans); text-decoration: none; letter-spacing: -0.01em; }
+.brand svg { width: 1.5rem; height: 1.5rem; fill: var(--ink); }
+
+main { flex: 1; display: grid; align-items: center; overflow-x: clip; padding: clamp(1.25rem, 4vw, 3rem) var(--gut) clamp(2rem, 5vw, 4rem); }
+.intro { max-width: 1400px; margin-inline: auto; width: 100%; display: grid; gap: 2.2rem; align-items: center; }
+.kicker { font: 700 0.78rem/1.3 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
+h1 { margin-top: 0.8rem; font: 800 clamp(2.4rem, min(9vw, 11vh), 5.6rem)/0.98 var(--sans); letter-spacing: -0.035em; text-wrap: balance; }
+h1 em { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; }
+
+.choices { margin-top: clamp(1.6rem, 4vw, 2.6rem); display: grid; gap: 1rem; max-width: 46rem; }
+.choice { display: grid; gap: 0.5rem; padding: 1.3rem 1.4rem 1.4rem; border-radius: 1.4rem; border: 2px solid var(--ink); text-decoration: none; transition: translate 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s; }
+.choice-k { font: 800 clamp(1.5rem, 4.2vw, 2.1rem)/1.05 var(--sans); letter-spacing: -0.02em; }
+.choice-t { font-size: 1.1rem; line-height: 1.45; max-width: 36ch; }
+.choice-go { margin-top: 0.4rem; font: 700 1rem/1 var(--sans); display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; }
+.choice-play { background: var(--y); box-shadow: 0 6px 0 var(--ink); padding-block: 1.6rem 1.6rem; }
+.choice-play .choice-k { font-size: clamp(1.9rem, 5.4vw, 2.8rem); }
+.choice-play:hover { translate: 0 3px; box-shadow: 0 3px 0 var(--ink); }
+.choice-research { background: var(--paper); }
+.choice-research:hover { background: #fff; translate: 0 -3px; box-shadow: 0 6px 0 rgba(16,14,10,.18); }
+.choice:focus-visible { outline: 3px solid var(--ink); outline-offset: 5px; }
+
+/* the five deck backs, dealt in a fan */
+.fan { position: relative; height: clamp(14rem, 52vw, 20rem); }
+.fan span { position: absolute; left: 50%; bottom: 0; width: clamp(5.6rem, 22vw, 9rem); margin-left: calc(var(--i) * clamp(2.6rem, 9vw, 4.4rem) - clamp(5.2rem, 18vw, 8.8rem)); translate: -50% 0; rotate: calc((var(--i) - 2) * 9deg); transform-origin: 50% 120%; filter: drop-shadow(0 16px 16px rgba(16,14,10,.3)); animation: deal 0.8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(0.1s + var(--i) * 0.08s); }
+.fan img { display: block; width: 100%; height: auto; border-radius: 0.5rem; }
+@keyframes deal { from { opacity: 0; translate: -50% 40%; rotate: 0deg; } }
+
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 1.5rem; padding: 1rem var(--gut) 1.5rem; font: 500 0.95rem/1.4 var(--sans); color: var(--ink-2); }
+.foot a { display: inline-flex; align-items: center; min-height: 2.75rem; text-underline-offset: 0.25em; }
+
+@media (min-width: 62rem) {
+  .intro { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 3rem; }
+  .fan { height: clamp(20rem, 52vh, 30rem); }
+  .fan span { width: clamp(8rem, 12vw, 12rem); margin-left: calc(var(--i) * clamp(3.4rem, 5.2vw, 5.8rem) - clamp(7rem, 10vw, 11rem)); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }

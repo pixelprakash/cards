@@ -2,8 +2,8 @@
 // Everything is built from numbers and escaped text, so a player's written answer can never run as markup.
 
 import { loadLocal } from "../game/store.js";
-import { computeMetrics, crossTab, filterPlays, toCSV, samplePlays, DIMENSIONS, comboLabel } from "./metrics.js";
-import { AGE_BANDS, GENDERS } from "../game/config.js";
+import { computeMetrics, crossTab, filterPlays, toCSV, samplePlays, normalize, DIMENSIONS, CARD_DIMENSIONS, handLabel } from "./metrics.js";
+import { AGE_BANDS, GENDERS, GROUPS } from "../game/config.js";
 
 const $ = (s) => document.querySelector(s);
 const out = $("#out");
@@ -18,7 +18,7 @@ const fmtDur = (ms) => {
 const when = (iso) => new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const day = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
-const state = { note: "", source: "local", plays: [], sample: samplePlays(), shared: null, filters: { days: 0, challenge: "", group: "", age: "", gender: "" }, cross: { row: "challenge", col: "methods" } };
+const state = { note: "", source: "local", plays: [], sample: samplePlays(), shared: null, filters: { days: 0, challenge: "", group: "", age: "", gender: "" }, cross: { row: "issue", col: "methods" } };
 
 // ---------------------------------------------------------------- data sources
 class Unauthorised extends Error {}
@@ -112,45 +112,59 @@ function render() {
     return;
   }
 
-  const maxChal = Math.max(...m.challenges.map((c) => c.count), 1);
   const kpis = `<div class="kpis">
     ${kpi(m.totals.started, "plays started")}
     ${kpi(m.totals.completed, "plays finished", `${pct(m.totals.completionRate)} of those started`)}
     ${kpi(m.totals.players, m.totals.players === 1 ? "player" : "players", "anonymous ids")}
-    ${kpi(`${m.combos.unique} of ${m.combos.possible}`, "hands explored", `${pct(m.combos.coverage, 1)} of every possible hand`)}
+    ${kpi(m.hands.unique, "different hands finished", "a hand is the exact set of cards chosen")}
   </div>`;
+
+  const whoBars = (rows) => { const top = Math.max(...rows.map((r) => r.count), 1); return `<ul class="rows">${rows.map((r) => bar(r.title, r.count, top, { over: r.completed, sub: `${r.count}`, note: `${r.completed} finished` })).join("")}</ul>`; };
+  const who = card("Who is playing", `${legend(["light", "Started"], ["dark", "Finished"])}<div class="subs two"><div class="sub"><h3>Age</h3>${whoBars(m.who.age)}</div><div class="sub"><h3>Gender</h3>${whoBars(m.who.gender)}</div></div>`, { wide: true, hint: `${m.who.profiled} of ${m.totals.started} plays have these answers; ${m.who.named} gave a name and ${m.who.emails} an email address.` });
 
   const funnel = card("Where players get to", `<ul class="rows">${m.funnel.map((f, i) => bar(f.step, f.count, m.funnel[0].count, { sub: `${f.count}`, note: i ? pct(f.count / (m.funnel[0].count || 1)) : "" })).join("")}</ul>`, { hint: "Every play that started." });
 
-  const chal = card("Challenges chosen", `${legend(["light", "Chosen"], ["dark", "Played to the end"])}<ul class="rows">${m.challenges.map((c) => bar(c.title, c.count, maxChal, { over: c.completed, sub: `${c.count}`, note: `${c.completed} finished` })).join("")}</ul>`, { hint: "The Issue card each player picked." });
+  const maxIssue = Math.max(...m.issues.map((c) => c.count), 1);
+  const issues = card("Issues chosen", `${legend(["light", "Chosen"], ["dark", "Played to the end"])}<ul class="rows">${m.issues.map((c) => bar(c.title, c.count, maxIssue, { over: c.completed, sub: `${c.count}`, note: `${c.completed} finished` })).join("")}</ul>`, { hint: "The Issue card in each play." });
 
-  const picks = DIMENSIONS.filter((d) => d.played && d.key !== "challenge").map((d) => {
+  const picks = CARD_DIMENSIONS.filter((d) => d.key !== "issue").map((d) => {
     const list = m.cardPicks[d.key];
     const top = Math.max(...list.map((c) => c.count), 1);
     return `<div class="sub"><h3>${esc(d.label)}</h3><ul class="rows">${list.map((c) => bar(c.title, c.count, top, { sub: `${c.count}` })).join("")}</ul></div>`;
   }).join("");
-  const cards = card("Which cards players choose", `<div class="subs">${picks}</div>`, { wide: true, hint: "Final choice in each finished play." });
+  const cards = card("Which cards players choose", `<div class="subs">${picks}</div>`, { wide: true, hint: "Cards in finished plays. Values and places can be up to two and three per play." });
 
-  const topList = m.combos.top.slice(0, 10);
-  const combos = card("Most repeated hands", topList.length
-    ? `<ol class="top">${topList.map((c) => `<li><span class="n">${c.count}×</span><span class="hand">${c.labels.map((l) => `<b>${esc(l)}</b>`).join('<i aria-hidden="true"> · </i>')}</span></li>`).join("")}</ol>${m.combos.top[0].count === 1 ? `<p class="hint">No hand has been played twice yet.</p>` : ""}`
-    : `<p class="empty">No finished plays yet.</p>`, { hint: "Challenge, force, value, method, place." });
+  const topList = m.hands.top.slice(0, 10);
+  const hands = card("Most repeated hands", topList.length
+    ? `<ol class="top">${topList.map((c) => `<li><span class="n">${c.count}×</span><span class="hand">${c.labels.map((l) => `<b>${esc(l)}</b>`).join('<i aria-hidden="true"> · </i>')}</span></li>`).join("")}</ol>${m.hands.top[0].count === 1 ? `<p class="hint">No hand has been played twice yet.</p>` : ""}`
+    : `<p class="empty">No finished plays yet.</p>`, { hint: "Issue, force, values, method and places." });
 
-  const axisOpts = DIMENSIONS.map((d) => ({ key: d.key, label: d.label }));
-  const sel = (id, v) => `<select id="${id}">${axisOpts.map((o) => `<option value="${o.key}"${o.key === v ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+  const sel = (id, v) => `<select id="${id}">${DIMENSIONS.map((o) => `<option value="${o.key}"${o.key === v ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
   const ct = crossTab(plays, state.cross.row, state.cross.col);
-  const cross = card("Compare any two things", `<div class="axes"><label>Rows ${sel("x-row", state.cross.row)}</label><label>Columns ${sel("x-col", state.cross.col)}</label></div>${heat(ct)}`, { wide: true, hint: `Finished plays for each pair, for example age by challenge (${ct.total} plays). Darker means more.` });
+  const cross = card("Compare any two things", `<div class="axes"><label>Rows ${sel("x-row", state.cross.row)}</label><label>Columns ${sel("x-col", state.cross.col)}</label></div>${heat(ct)}`, { wide: true, hint: `Finished plays for each pair, for example age by issue (${ct.total} plays). Darker means more.` });
 
   const day_ = card("Plays per day", perDayChart(m.perDay));
 
   const t = m.time;
-  const time = card("How long a play takes", `<p class="statline"><b>${fmtDur(t.median)}</b> median <span>· middle half between ${fmtDur(t.p25)} and ${fmtDur(t.p75)}</span></p>${timeChart(t)}<dl class="mini"><div><dt>Choosing a challenge</dt><dd>${fmtDur(t.steps.challenge)}</dd></div><div><dt>Filling the blanks</dt><dd>${fmtDur(t.steps.blanks)}</dd></div><div><dt>Answering questions</dt><dd>${fmtDur(t.steps.questions)}</dd></div></dl>`, { hint: "Finished plays only. Medians per step." });
+  const time = card("How long a play takes", `<p class="statline"><b>${fmtDur(t.median)}</b> median <span>· middle half between ${fmtDur(t.p25)} and ${fmtDur(t.p75)}</span></p>${timeChart(t)}<dl class="mini"><div><dt>Discover</dt><dd>${fmtDur(t.steps.discover)}</dd></div><div><dt>Assemble</dt><dd>${fmtDur(t.steps.assemble)}</dd></div><div><dt>Imagine</dt><dd>${fmtDur(t.steps.imagine)}</dd></div><div><dt>Describe</dt><dd>${fmtDur(t.steps.describe)}</dd></div></dl>`, { hint: "Finished plays only. Medians per step." });
 
   const e = m.engagement;
-  const eng = card("How players engage", `<dl class="mini big"><div><dt>Cards swapped per play</dt><dd>${num1(e.avgSwaps)}</dd></div><div><dt>“Draw for me” per play</dt><dd>${num1(e.avgDraws)}</dd></div><div><dt>Questions answered</dt><dd>${pct(e.answeredRate)}</dd></div><div><dt>Wrote a prompt</dt><dd>${pct(e.promptRate)}</dd></div><div><dt>Average answer length</dt><dd>${e.avgAnswerChars == null ? "–" : `${Math.round(e.avgAnswerChars)} characters`}</dd></div></dl>`, { hint: "Finished plays only." });
+  const modeTop = Math.max(...m.modes.map((x) => x.count), 1);
+  const modeNames = { random: "Drew cards randomly", choose: "Chose cards themselves", explore: "Started by exploring" };
+  const eng = card("How players engage", `<ul class="rows">${m.modes.map((x) => bar(modeNames[x.mode], x.count, modeTop, { sub: `${x.count}` })).join("")}</ul><dl class="mini big">
+    <div><dt>Random draws per play</dt><dd>${num1(e.avgDraws)}</dd></div>
+    <div><dt>Cards swapped per play</dt><dd>${num1(e.avgSwaps)}</dd></div>
+    <div><dt>Used “Make clearer”</dt><dd>${pct(e.clarifiedRate)}</dd></div>
+    <div><dt>Explored a different version</dt><dd>${pct(e.versionsRate)}</dd></div>
+    <div><dt>Locked a card</dt><dd>${pct(e.lockedRate)}</dd></div>
+    <div><dt>Answered any question</dt><dd>${pct(e.answeredAny)}</dd></div>
+    <div><dt>Questions answered per play</dt><dd>${num1(e.avgAnswers)}</dd></div>
+    <div><dt>Edited the scenario</dt><dd>${pct(e.editedRate)}</dd></div>
+    <div><dt>Regenerated a part</dt><dd>${pct(e.regeneratedRate)}</dd></div>
+  </dl>`, { hint: "Finished plays from the current version of the game." });
 
-  const whoBars = (rows) => { const top = Math.max(...rows.map((r) => r.count), 1); return `<ul class="rows">${rows.map((r) => bar(r.title, r.count, top, { over: r.completed, sub: `${r.count}`, note: `${r.completed} finished` })).join("")}</ul>`; };
-  const who = card("Who is playing", `${legend(["light", "Started"], ["dark", "Finished"])}<div class="subs two"><div class="sub"><h3>Age</h3>${whoBars(m.who.age)}</div><div class="sub"><h3>Gender</h3>${whoBars(m.who.gender)}</div></div>`, { wide: true, hint: `${m.who.profiled} of ${m.totals.started} plays have these answers; ${m.who.named} gave a name and ${m.who.emails} an email address.` });
+  const rate = (r) => `<div class="sub"><h3>${r.n ? `Average ${num1(r.mean)} of 5` : "No answers yet"}<small> (${r.n} ${r.n === 1 ? "answer" : "answers"})</small></h3><ul class="rows">${r.counts.map((c) => bar(`${c.rating}`, c.count, Math.max(...r.counts.map((x) => x.count), 1), { sub: `${c.count}` })).join("")}</ul></div>`;
+  const survey = card("Before and after", `<div class="subs two"><div class="sub"><h3 class="q">How easy is it to imagine alternative futures of education? <small>1 very difficult, 5 very easy. Asked before playing.</small></h3>${rate(m.survey.pre)}</div><div class="sub"><h3 class="q">Did this help you imagine possibilities you had not considered? <small>1 not at all, 5 a great deal. Asked after playing.</small></h3>${rate(m.survey.post)}</div></div>`, { wide: true, hint: `${m.survey.feedback} ${m.survey.feedback === 1 ? "player" : "players"} wrote feedback (see below).` });
 
   const maxDev = Math.max(...m.devices.map((d) => d.count), 1);
   const dev = card("Devices", `<ul class="rows">${m.devices.map((d) => bar(d.device[0].toUpperCase() + d.device.slice(1), d.count, maxDev, { sub: `${d.count}` })).join("")}</ul>`);
@@ -158,13 +172,14 @@ function render() {
   const finished = plays.filter((p) => p.status === "completed");
   const responses = card("What players wrote", finished.length
     ? `<ul class="resp">${finished.slice(-12).reverse().map((p) => {
-        const hand = comboLabel([p.challenge, p.picks.forces, p.picks.value, p.picks.methods, p.picks.places].join("|")).join(" · ");
-        const qa = (p.questions || []).filter((q) => (q.answer || "").trim());
-        return `<li><details><summary><span class="hand">${esc(hand)}</span><span class="meta">${esc([p.player?.name, p.player?.email, AGE_BANDS.find((a) => a.id === p.player?.age)?.label, GENDERS.find((g) => g.id === p.player?.gender)?.label, p.group, when(p.completedAt || p.startedAt)].filter(Boolean).join(" · "))}</span></summary>${p.prompt.trim() ? `<p class="pr"><b>Prompt</b> ${esc(p.prompt)}</p>` : ""}${qa.length ? `<dl class="qa">${qa.map((q) => `<dt>${esc(q.text)}</dt><dd>${esc(q.answer)}</dd>`).join("")}</dl>` : `<p class="hint">No written answers.</p>`}</details></li>`;
+        const sc = p.scenario || {};
+        const qa = GROUPS.flatMap((g) => g.qs.map((q, i) => [q, p.answers?.[`${g.key}-${i + 1}`] ?? ""])).filter(([, a]) => a.trim());
+        const who = [p.player?.name, p.player?.email, AGE_BANDS.find((a) => a.id === p.player?.age)?.label, GENDERS.find((g) => g.id === p.player?.gender)?.label, p.group, when(p.completedAt || p.startedAt)].filter(Boolean).join(" · ");
+        return `<li><details><summary><span class="hand">${esc(sc.title || handLabel(p).join(" · "))}</span><span class="meta">${esc(who)}</span></summary>${p.sentence ? `<p class="pr"><b>Sentence</b> ${esc(p.sentence)}</p>` : ""}${sc.idea ? `<p class="pr"><b>The idea</b> ${esc(sc.idea)}</p>` : ""}${sc.difference ? `<p class="pr"><b>The difference</b> ${esc(sc.difference)}</p>` : ""}<p class="pr"><b>Cards</b> ${esc(handLabel(p).join(" · "))}</p>${p.details ? `<p class="pr"><b>Own thoughts</b> ${esc(p.details)}</p>` : ""}${qa.length ? `<dl class="qa">${qa.map(([q, a]) => `<dt>${esc(q)}</dt><dd>${esc(a)}</dd>`).join("")}</dl>` : ""}${(p.nudges || []).filter((n) => n.answer).map((n) => `<p class="pr"><b>${esc(n.text)}</b> ${esc(n.answer)}</p>`).join("")}${p.survey?.feedback ? `<p class="pr"><b>Feedback</b> ${esc(p.survey.feedback)}</p>` : ""}</details></li>`;
       }).join("")}</ul><p class="hint">The latest 12 finished plays. The download has all of them.</p>`
     : `<p class="empty">No finished plays yet.</p>`, { wide: true, hint: "Free text from players. It may contain personal details; handle it as research data." });
 
-  out.innerHTML = `${kpis}<div class="grid">${who}${funnel}${chal}${cards}${combos}${cross}${day_}${time}${eng}${dev}${responses}</div>`;
+  out.innerHTML = `${kpis}<div class="grid">${who}${funnel}${issues}${cards}${hands}${cross}${survey}${day_}${time}${eng}${dev}${responses}</div>`;
 }
 
 function syncFilters(all) {
@@ -175,7 +190,7 @@ function syncFilters(all) {
     el.value = cur;
   };
   const m = computeMetrics(all);
-  fill(ch, m.challenges.map((c) => [c.id, c.title]), state.filters.challenge);
+  fill(ch, m.issues.map((c) => [c.id, c.title]), state.filters.challenge);
   fill(gr, m.totals.groups.map((g) => [g, g]), state.filters.group);
   fill($("#f-age"), AGE_BANDS.map((a) => [a.id, a.label]), state.filters.age);
   fill($("#f-gender"), GENDERS.map((g) => [g.id, g.label]), state.filters.gender);
@@ -253,7 +268,7 @@ async function signedIn() {
   gate.hidden = true;
   app.hidden = false;
   outBtn.hidden = false;
-  state.plays = loadLocal();
+  state.plays = loadLocal().map(normalize);
   state.source = "local";
   state.note = "";
   before = "local";

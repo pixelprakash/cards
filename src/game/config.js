@@ -1,56 +1,47 @@
-// The game's rules, in one place. Reshape the flow by editing this file (and questions.js).
-// Challenge = an Issue card. Then the player fills one blank from each of four decks.
-
-export const CHALLENGE_DECK = "issue";
-
-export const SLOTS = [
-  { key: "forces", deck: "forces", label: "Force", ask: "Pick a force of change" },
-  { key: "value", deck: "value", label: "Value", ask: "Pick a value" },
-  { key: "methods", deck: "methods", label: "Method", ask: "Pick a method of learning" },
-  { key: "places", deck: "places", label: "Place", ask: "Pick a place" },
-];
+// The game's rules, in one place (the October brief): four steps, the sentence the cards build, and the optional questions.
 
 export const STEPS = [
-  { key: "challenge", label: "Challenge" },
-  { key: "blanks", label: "Cards" },
-  { key: "questions", label: "Questions" },
-  { key: "done", label: "Done" },
+  { key: "discover", label: "Discover" },
+  { key: "assemble", label: "Assemble" },
+  { key: "imagine", label: "Imagine" },
+  { key: "describe", label: "Describe" },
+  { key: "finish", label: "Finish" },
 ];
 
-// How each card reads inside a sentence. This is the game's own wording, not text printed on the cards.
-export const SAY = {
-  "skills-mismatch": "a skills mismatch",
-  "curricular-problems": "curricular problems",
-  "rising-educational-costs": "rising educational costs",
-  beginning: "“Beginning”",
-  flowing: "“Flowing”",
-  becoming: "“Becoming”",
-  diversity: "diversity",
-  "lifelong-learning": "lifelong learning",
-  sustainability: "sustainability",
-  collaboration: "collaboration",
-  "discussion-based-learning": "discussion-based learning",
-  "experiential-learning": "experiential learning",
-  "simulation-based-learning": "simulation-based learning",
-  "simulation-center": "in a simulation center",
-  "museum-gallery": "in a museum or gallery",
-  "top-of-the-tree": "at the top of a tree",
-  "bio-dome": "in a bio-dome",
-};
-
-// The sentence the player completes. {slot} marks a blank.
-export const SENTENCE = [
-  "To tackle ", { slot: "challenge" },
-  ", in a world shaped by ", { slot: "forces" },
-  ", we start from ", { slot: "value" },
-  ", learn through ", { slot: "methods" },
-  ", ", { slot: "places" }, ".",
+// The slots of the sentence, in reading order. min 1 = the player must choose a card before continuing.
+export const SLOTS = [
+  { key: "issue", deck: "issue", label: "Issue", lead: "In response to", min: 1, max: 1, ask: "Choose an issue" },
+  { key: "forces", deck: "forces", label: "Force of change", lead: "shaped by", min: 0, max: 1, ask: "Choose a force of change" },
+  { key: "value", deck: "value", label: "Value", lead: "that prioritises", min: 0, max: 2, ask: "Choose up to two values" },
+  { key: "methods", deck: "methods", label: "Method of learning", lead: "through learning by", min: 1, max: 1, ask: "Choose a method of learning" },
+  { key: "places", deck: "places", label: "Place or space", lead: "in", min: 0, max: 3, ask: "Choose up to three places" },
 ];
+export const SLOT_BY_DECK = Object.fromEntries(SLOTS.map((s) => [s.deck, s]));
 
-export const PROMPT_ASK = "Now write your prompt: a concise, vivid description of the learning environment this hand suggests.";
+// Optional questions, three at a time. Wording is from the brief.
+export const GROUPS = [
+  { key: "experience", title: "Learning experience", qs: [
+    "What would someone actually do to learn in this future?",
+    "What would be different from learning today?",
+    "What might make this way of learning meaningful or exciting?",
+  ] },
+  { key: "arrangement", title: "Learning arrangement", qs: [
+    "How do learners find resources, feedback, or guidance?",
+    "How is learning recognised, if at all?",
+    "Who learns together, and who helps them?",
+  ] },
+  { key: "tensions", title: "Tensions and consequences", qs: [
+    "Who might benefit most, and who might be left out?",
+    "What could go wrong?",
+    "What would be difficult to change about today’s arrangements?",
+  ] },
+];
+export const QUESTION_IDS = GROUPS.flatMap((g) => g.qs.map((_, qi) => `${g.key}-${qi + 1}`));
 
-// Who is playing. Asked once, before the challenge. Name is optional; age band and gender must be answered, and each has
-// "Prefer not to say". Keep the ids in step with api/plays.js, which only accepts these values.
+// The Action Words, used as optional prompts. The brief names these two; add more here.
+export const NUDGES = ["Reverse an assumption", "Make the idea more radical"];
+
+// Who is playing (asked before Step 1). Keep the ids in step with api/_play.js.
 export const AGE_BANDS = [
   { id: "u18", label: "Under 18" },
   { id: "18-24", label: "18 to 24" },
@@ -61,7 +52,6 @@ export const AGE_BANDS = [
   { id: "65+", label: "65 or older" },
   { id: "na", label: "Prefer not to say" },
 ];
-
 export const GENDERS = [
   { id: "woman", label: "Woman" },
   { id: "man", label: "Man" },
@@ -70,3 +60,4 @@ export const GENDERS = [
 ];
 
 export const CONSENT = "Your answers and these details are saved for research and can be read by the research team. Your name is optional. Please leave personal details out of what you write.";
+export const EMAIL_PURPOSE = "We will email you your scenario so you can keep it. If you agree, the research team also keeps your address. Leave it blank to skip.";

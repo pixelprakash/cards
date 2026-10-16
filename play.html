@@ -25,10 +25,13 @@
 <body>
 <a class="skip" href="#screen">Skip to the game</a>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><symbol id="lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g></symbol></svg>
+
 <main id="main" class="play" tabindex="-1">
   <h1 class="vh">Play the Pedagogy Playcards game</h1>
   <p class="vh">Pick a challenge, fill in the blanks with cards, and answer the questions the game writes for you.</p>
 
+  <p class="vh" id="sr" role="status" aria-live="polite"></p>
   <div class="console" id="console" data-step="start" role="region" aria-label="Game console">
     <div class="gc-top">
       <a class="gc-exit" href="/"><span aria-hidden="true">&larr;</span> Exit</a>
@@ -48,5 +51,13 @@
     <div class="gc-foot"><p class="gc-keys">Arrow keys move &middot; Enter selects &middot; Esc goes back</p><a href="/researcher">Researcher login</a></div>
   </div>
 </main>
+
+<dialog id="confirm" class="gc-dialog" aria-labelledby="confirm-t">
+  <form method="dialog">
+    <h2 id="confirm-t">Are you sure?</h2>
+    <p data-msg></p>
+    <div class="gc-acts"><button value="no" class="gc-ghost" autofocus>Keep working</button><button value="yes" class="gc-go" data-yes>Yes</button></div>
+  </form>
+</dialog>
 </body>
 </html>

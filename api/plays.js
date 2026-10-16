@@ -28,6 +28,8 @@ export default async function handler(req, res) {
       if (raw.length > MAX_BODY) return json(res, 413, { error: "Too large." });
       const play = sanitise(typeof req.body === "string" ? JSON.parse(raw) : req.body);
       if (!play) return json(res, 400, { error: "Not a valid play." });
+      const prev = JSON.parse((await redis("HGET", HASH, play.id)) || "null");
+      if (prev?.reportSends) play.reportSends = prev.reportSends;   // do not let a re-save reset the email limit
       await redis("HSET", HASH, play.id, JSON.stringify(play));
       return json(res, 200, { ok: true });
     }

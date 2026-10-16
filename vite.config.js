@@ -75,7 +75,7 @@ function playcardsSite() {
       })
       server.middlewares.use((req, _res, next) => {
         const [path, query = ''] = (req.url || '').split('?')
-        if (path === '/play' || path === '/researcher') req.url = `${path}.html${query ? `?${query}` : ''}`
+        if (path === '/play' || path === '/researcher' || path === '/research') req.url = `${path}.html${query ? `?${query}` : ''}`
         next()
       })
     },
@@ -86,11 +86,11 @@ function playcardsSite() {
         const page = (ctx.filename || ctx.path || '').split(/[\\/]/).pop()
         // The researcher page is private: no card markup, no social tags, no structured data.
         if (page.startsWith('researcher')) return ctx.bundle ? inlineCss(html, ctx) : html
-        const isHome = !page.startsWith('play')
+        const isHome = page.startsWith('index')   // structured data belongs on the home page only
 
         // Every card is written into the static HTML from the shared card data, so all card text is crawlable.
         let out = html
-        if (isHome) {
+        {
           const gallery = browseHTML()
           out = out
             .replace('<!--@hero-slots-->', heroSlotsHTML())
@@ -138,6 +138,6 @@ export default defineConfig({
   plugins: [playcardsSite()],
   build: {
     modulePreload: { polyfill: false },
-    rollupOptions: { input: { main: 'index.html', play: 'play.html', researcher: 'researcher.html' } },
+    rollupOptions: { input: { main: 'index.html', research: 'research.html', play: 'play.html', researcher: 'researcher.html' } },
   },
 })

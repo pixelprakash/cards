@@ -1,8 +1,11 @@
 // Recording plays. Every play is saved in this browser; if the shared database is connected (see api/plays.js)
 // it is also sent there, so a researcher sees every player. A play carries the player's optional name, age band and
 // gender (asked at the start of the game) next to a random browser id.
+// Record v2 (October brief): picks are lists per deck; the scenario is the three parts the player finished with.
 
-const LOCAL = "pp.plays.v1";
+import { emptySelection } from "./sentence.js";
+
+const LOCAL = "pp.plays.v2";
 const PID = "pp.pid";
 const ENDPOINT = "/api/plays";
 
@@ -20,24 +23,27 @@ export const cleanPlayer = (p = {}) => ({
   name: String(p.name ?? "").replace(/\s+/g, " ").trim().slice(0, 40),
   age: String(p.age ?? ""),
   gender: String(p.gender ?? ""),
+  email: String(p.email ?? "").trim().toLowerCase().slice(0, 120),
 });
 
-export const newPlay = (group = "", player = {}) => ({
-  v: 1,
+export const newPlay = (group = "", player = {}, survey = {}) => ({
+  v: 2,
   id: uid("p"),
   pid: playerId(),
   group: group.trim().slice(0, 24),
   player: cleanPlayer(player),
+  survey: { pre: survey.pre ?? null, post: null, feedback: "" },
   status: "started",
   startedAt: new Date().toISOString(),
   completedAt: null,
-  challenge: null,
-  picks: {},
-  swaps: 0,
-  draws: 0,
+  picks: emptySelection(),
+  answers: {},
+  nudges: [],
+  details: "",
+  scenario: { title: "", idea: "", difference: "" },
+  edited: [],
+  stats: { mode: "", draws: 0, swaps: 0, locks: 0, clarified: 0, versions: 1, regenerated: 0 },
   pickLog: [],
-  questions: [],
-  prompt: "",
   durations: {},
   device: innerWidth < 640 ? "phone" : innerWidth < 1024 ? "tablet" : "desktop",
 });

@@ -15,11 +15,22 @@ npm run lint
 
 | Address | What it is |
 | --- | --- |
-| `/` | The story and the decks. "Play" buttons lead to the game. |
-| `/play` | The game console: choose a challenge (an Issue card), fill four blanks with cards, answer the generated questions. |
-| `/researcher` | Sign-in, then the dashboard: hands explored out of 432, challenge and card choices, pairings, timings, answers, CSV/JSON export. Not indexed. |
+| `/` | Home: two choices, Play Space and Research Background. |
+| `/play` | The game console, built to the October brief: about you, then 1 Discover, 2 Assemble, 3 Imagine, 4 Describe, and a finish screen. |
+| `/research` | Research Background. A placeholder made from the earlier landing page; the final content is to be supplied. |
+| `/researcher` | Sign-in, then the dashboard: hands, card and issue choices, pairings, timings, survey answers, written scenarios, CSV/JSON export. Not indexed. |
 
-The game's rules live in `src/game/config.js` and `src/game/questions.js`. The metrics are pure functions in `src/researcher/metrics.js`.
+## The game
+
+- Cards are the designer's final card faces. Originals live in `src-cards/` (not shipped); `python3 scripts/build-cards.py`
+  turns them into WebP files in `public/cards/full/` and writes `src/cards/data.js` (names, printed descriptions, and
+  the phrase each card uses inside the sentence). The blank cards (Name Your Space/Value, You Spot the Issue) are left out of
+  the first build.
+- The rules are in `src/game/config.js` (steps, sentence slots and their limits, the nine optional questions, the optional
+  Action-Word nudges). Wording is rule-based, no AI: `src/game/sentence.js` builds the sentence, the "Make clearer"
+  rewrites and the three scenario parts. `node scripts/check-game.mjs` tests it on 5,000 random hands.
+- `src/game/play.js` is the screen controller; `src/game/store.js` keeps each play (record v2) in the browser and sends it
+  to `/api/plays` when the shared database is connected.
 
 ## Researcher sign-in and shared data
 

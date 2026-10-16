@@ -1,5 +1,5 @@
-// The game page: loads the console, which starts itself, and wires the full-screen button.
-import "./console.js";
+// The game page: loads the game, which starts itself, and wires the full-screen button.
+import "./play.js";
 
 const fs = document.getElementById("fs");
 const el = document.documentElement;
