@@ -52,7 +52,7 @@ export function sentenceText(sel, variant = 0) {
     const second = `${force ? `Shaped by ${force}, it` : "It"}${values ? ` prioritises ${values} and` : ""} learns through ${M}${places ? ` in ${places}` : ""}.`;
     return `${first} ${second}`;
   }
-  return `In response to ${I}, a future${force ? ` shaped by ${force}` : ""}${values ? ` that prioritises ${values}` : ""} through learning by ${M}${places ? ` in ${places}` : ""}.`;
+  return `In response to ${I}, a future${force ? ` shaped by ${force}` : ""}${values ? ` that prioritises ${values}` : ""}${force || values ? "" : " that works"} through learning by ${M}${places ? ` in ${places}` : ""}.`;
 }
 export const CLEAR_VARIANTS = 2;
 

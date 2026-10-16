@@ -21,8 +21,8 @@ function init() {
 
   const ui = {
     step: "you", group: "", profile: null, pre: null,
-    libDeck: "issue", libMode: "explore", choose: null, chooseOpener: "",
-    showDetails: false, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
+    libDeck: "issue", libMode: "explore", choose: null, chooseOpener: "", choseNow: false,
+    showDetails: false, moreTools: false, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
     versions: [], vcur: 0, locked: {}, stepAt: Date.now(),
   };
   let play = null;
@@ -75,10 +75,29 @@ function init() {
     return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}>${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
   };
 
-  function comboBar() {
-    const chips = SLOTS.flatMap((s) => sel()[s.key].map((id) => ({ s, c: cardOf(s.deck, id) })));
-    if (!chips.length) return `<p class="gc-fine">No cards in your combination yet.</p>`;
-    return `<ul class="gc-combo" aria-label="Your combination">${chips.map(({ s, c }) => `<li data-deck="${s.deck}"><span>${esc(c.name)}</span><button type="button" data-act="remove-card" data-deck="${s.deck}" data-id="${c.id}" data-nav aria-label="Remove ${esc(c.name)}">&times;</button></li>`).join("")}</ul>`;
+  // What the sentence still needs, in reading order (Issue and Method of learning are required).
+  const missing = () => SLOTS.filter((x) => sel()[x.key].length < x.min);
+  const NEED = { issue: "an issue", forces: "a force of change", value: "a value", methods: "a method of learning", places: "a place" };
+  const needText = () => { const m = missing().map((x) => NEED[x.key]); return m.length ? `Still needed: ${m.length > 1 ? `${m.slice(0, -1).join(", ")} and ${m.at(-1)}` : m[0]}.` : ""; };
+
+  // A progress strip for the five decks: what is chosen, what is required. Tapping one goes to that deck.
+  function trackerHTML(active) {
+    const items = SLOTS.map((x) => {
+      const names = sel()[x.key].map((id) => cardOf(x.deck, id)?.name).filter(Boolean);
+      const done = names.length >= Math.max(1, x.min);
+      const state = names.length ? names.join(" + ") : x.min ? "Required" : "Optional";
+      return `<li><button type="button" class="gc-trk${done ? " is-done" : ""}${x.min && !names.length ? " is-req" : ""}" data-act="track" data-deck="${x.deck}" data-nav${active === x.deck ? ' aria-current="step"' : ""}><span class="gc-trk-mark" aria-hidden="true">${done ? "&#10003;" : ""}</span><span class="gc-trk-t"><b>${esc(x.label)}</b><i>${esc(state)}</i></span></button></li>`;
+    }).join("");
+    return `<ol class="gc-track" aria-label="Your combination">${items}</ol>`;
+  }
+
+  // Clicking Continue (or a tool) with a required card missing takes you to choosing it, instead of doing nothing.
+  function guideToMissing() {
+    const first = missing()[0];
+    if (!first) return false;
+    announce(`${needText()} Choose ${NEED[first.key]} to continue.`);
+    openChooser(first.deck, 0, `[data-act="continue"], [data-act="to-assemble"]`);
+    return true;
   }
 
   // ------------------------------------------------------------------ the card chooser
@@ -104,6 +123,7 @@ function init() {
         <h3>${esc(c.name)}</h3>
         <p class="gc-ch-desc${c.desc ? "" : " gc-ch-none"}">${c.desc ? esc(c.desc) : "This card shows a place and has no printed description."}</p>
         ${note ? `<p class="gc-fine">${esc(note)}</p>` : ""}
+        ${on ? `<button type="button" class="gc-keep" data-act="ch-keep" data-nav aria-pressed="${locked}">${locked ? "Kept when you shuffle" : "Keep this card when I shuffle"}</button>` : ""}
         <div class="gc-ch-nav">
           <button type="button" class="gc-ch-step" data-act="ch-prev" data-nav aria-label="Previous card">&larr;</button>
           <button type="button" class="gc-go gc-ch-choose" data-act="ch-choose" data-nav data-primary${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
@@ -132,10 +152,16 @@ function init() {
   }
   function closeChooser({ restore = true } = {}) {
     if (!ui.choose) return;
+    const closedDeck = ui.choose.deck;
     ui.choose = null;
     overlay.hidden = true;
     overlay.innerHTML = "";
     screen.inert = false;
+    if (ui.step === "library" && chosenIn(closedDeck).length && ui.choseNow) {
+      const next = SLOTS.find((x) => x.deck !== closedDeck && SLOTS.indexOf(x) > SLOTS.findIndex((y) => y.deck === closedDeck) && !sel()[x.key].length) || missing()[0];
+      if (next) { ui.libDeck = next.deck; announce(`Next: ${SLOT_BY_DECK[next.deck].ask.toLowerCase()}.`); }
+    }
+    ui.choseNow = false;
     render();
     if (restore && ui.chooseOpener) focusAfter(ui.chooseOpener);
   }
@@ -163,6 +189,7 @@ function init() {
     }
     if (!addCard(deck, c.id)) { announce(`You can have up to ${slot.max}. Remove one first.`); return; }
     announce(`${c.name} chosen.`);
+    ui.choseNow = true;
     if (slot.max === 1) closeChooser(); else repaintChooser('[data-act="ch-choose"]');
   }
 
@@ -182,8 +209,8 @@ function init() {
             ${GENDERS.map((g) => `<label class="gc-radio"><input type="radio" name="gender" value="${g.id}"${pr.gender === g.id ? " checked" : ""}><span>${g.label}</span></label>`).join("")}
           </fieldset>
           ${scale("pre", ui.pre, "Very difficult", "Very easy")}
-          <label class="gc-field"><span>Group or workshop code <i>(optional)</i></span><input name="group" maxlength="24" autocomplete="off" value="${esc(ui.group)}"></label>
         </div>
+        <details class="gc-fold"${ui.group ? " open" : ""}><summary>Part of a workshop? Add a group code</summary><label class="gc-field"><span>Group or workshop code</span><input name="group" maxlength="24" autocomplete="off" value="${esc(ui.group)}"></label></details>
         <p class="gc-err" id="you-err" role="alert"></p>
         <p class="gc-fine">${esc(CONSENT)}</p>
         <div class="gc-acts"><a class="gc-ghost" href="/" data-nav>Leave</a><button type="submit" class="gc-go" data-nav data-primary>Start playing</button></div>
@@ -192,26 +219,30 @@ function init() {
 
     discover() {
       return `<div class="gc-scr">${hud("discover")}
-        <h2 class="gc-title" tabindex="-1">Discover the cards</h2>
-        <p class="gc-sub">Five decks of cards. Draw a hand at random, choose your own, or just look around.</p>
-        <ul class="gc-decks">${DECK_KEYS.map((k) => `<li data-deck="${k}"><img src="${DECKS[k].coverSm}" alt="" width="300" height="525" loading="lazy"><b>${esc(DECKS[k].name)}</b><span>${esc(DECKS[k].blurb)}</span></li>`).join("")}</ul>
-        <div class="gc-acts gc-acts-flow">
-          <button type="button" class="gc-go" data-act="draw" data-nav data-primary>Draw cards randomly</button>
-          <button type="button" class="gc-ghost" data-act="choose" data-nav>Choose cards myself</button>
-          <button type="button" class="gc-ghost" data-act="explore" data-nav>Just explore the cards</button>
+        <h2 class="gc-title" tabindex="-1">How do you want to start?</h2>
+        <div class="gc-disc"><div class="gc-opts" role="group" aria-label="Ways to start">
+          <button type="button" class="gc-opt gc-opt-main" data-act="draw" data-nav data-primary><b>Draw cards randomly</b><span>A surprise hand, ready to use. The quickest way to begin.</span></button>
+          <button type="button" class="gc-opt" data-act="choose" data-nav><b>Choose cards myself</b><span>Pick one deck at a time. We guide you through it.</span></button>
+          <button type="button" class="gc-opt" data-act="explore" data-nav><b>Just explore the cards</b><span>Look at the cards first. Nothing is decided yet.</span></button>
         </div>
+        <div class="gc-dk"><h3 class="gc-tiny">The five decks</h3>
+          <ul class="gc-decklist">${DECK_KEYS.map((k) => `<li data-deck="${k}"><img src="${DECKS[k].coverSm}" alt="" width="300" height="525" loading="lazy"><span><b>${esc(DECKS[k].name)}</b><i>${esc(DECKS[k].blurb)}</i></span></li>`).join("")}</ul>
+        </div></div>
       </div>`;
     },
 
     library() {
       const deck = ui.libDeck, choose = ui.libMode === "choose";
+      const slot = SLOT_BY_DECK[deck];
+      const hint = needText();
       return `<div class="gc-scr">${hud("discover")}
         <h2 class="gc-title" tabindex="-1">${choose ? "Choose your cards" : "Explore the cards"}</h2>
-        <p class="gc-sub">${choose ? "Open a card to read it, then add it to your combination. You can change your mind later." : "Open any card to read it. You can add it to your combination or go back to Discover."}</p>
-        <div class="gc-tabs" role="group" aria-label="Decks">${DECK_KEYS.map((k) => `<button type="button" class="gc-tab" data-deck="${k}" data-act="lib-deck" data-nav aria-pressed="${k === deck}">${esc(DECKS[k].name)}</button>`).join("")}</div>
+        <p class="gc-sub">${choose ? "One deck at a time: tap a card to read it, then choose it. You need an issue and a method of learning. The rest is optional." : "Tap any card to read it. Choose the ones you like. You can change everything later."}</p>
+        ${trackerHTML(deck)}
+        ${hint ? `<p class="gc-need-top">${esc(hint)}</p>` : ""}
+        <div class="gc-deckrow"><p class="gc-deckhint">${esc(slot.ask)}${slot.min ? " (required)" : " (optional)"}</p>${slot.min ? "" : `<button type="button" class="gc-ghost gc-sm" data-act="skip" data-nav>Skip this deck &rarr;</button>`}</div>
         <ul class="gc-grid">${cardsOf(deck).map((c) => `<li>${tile(deck, c)}</li>`).join("")}</ul>
-        <div class="gc-mine"><h3 class="gc-tiny">Your combination</h3>${comboBar()}</div>
-        <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back to Discover</button><button type="button" class="gc-go" data-act="to-assemble" data-nav data-primary${countCards(sel()) ? "" : " disabled"}>Continue to Assemble</button></div>
+        <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button>${hint ? `<span class="gc-need" id="lib-need">${esc(hint)}</span>` : ""}<button type="button" class="gc-go" data-act="to-assemble" data-nav data-primary${hint ? ' aria-describedby="lib-need"' : ""}>Continue to Assemble</button></div>
       </div>`;
     },
 
@@ -222,31 +253,36 @@ function init() {
         const slot = SLOTS.find((x) => x.key === p.slot);
         const chips = s[slot.key].map((id) => {
           const c = cardOf(slot.deck, id), lk = !!ui.locked[key(slot.deck, id)];
-          return `<span class="gc-chipwrap" data-deck="${slot.deck}"><button type="button" class="gc-chip" data-act="slot" data-slot="${slot.key}" data-nav aria-label="Replace ${esc(c.name)}, ${esc(slot.label)}">${esc(c.name)}</button><button type="button" class="gc-lock" data-act="lock" data-deck="${slot.deck}" data-id="${id}" data-nav aria-pressed="${lk}" aria-label="Lock ${esc(c.name)}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#lock"/></svg></button></span>`;
+          return `<span class="gc-chipwrap" data-deck="${slot.deck}"><button type="button" class="gc-chip" data-act="slot" data-slot="${slot.key}" data-nav aria-label="${esc(c.name)}${lk ? ", kept when shuffling" : ""}. Change this card.">${lk ? '<svg class="gc-kept" viewBox="0 0 24 24" aria-hidden="true"><use href="#lock"/></svg>' : ""}${esc(c.name)}</button></span>`;
         }).join("");
         const add = s[slot.key].length < slot.max ? `<button type="button" class="gc-chip gc-chip-add${s[slot.key].length ? " is-more" : ""}" data-deck="${slot.deck}" data-act="slot" data-slot="${slot.key}" data-nav aria-label="${esc(slot.ask)}">${s[slot.key].length ? "+ add" : esc(slot.ask)}</button>` : "";
         return `<span class="gc-slot">${chips}${add}</span>`;
       }).join("");
 
-      const strip = SLOTS.flatMap((x) => s[x.key].map((id) => cardOf(x.deck, id))).map((c) => `<li><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="9rem" alt="" width="300" height="525" loading="lazy"></li>`).join("");
+      const strip = SLOTS.flatMap((x) => s[x.key].map((id) => cardOf(x.deck, id))).map((c) => `<li><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="9rem" alt="" width="300" height="525"></li>`).join("");
       const vn = ui.versions.length;
+      const moreOpen = ui.moreTools || ui.clarity || vn > 1 || ui.showDetails;
       const versions = vn > 1 ? `<div class="gc-versions" role="group" aria-label="Versions"><button type="button" class="gc-ghost gc-sm" data-act="ver-prev" data-nav${ui.vcur === 0 ? " disabled" : ""}>&larr; Previous version</button><span>Version ${ui.vcur + 1} of ${vn}</span><button type="button" class="gc-ghost gc-sm" data-act="ver-next" data-nav${ui.vcur === vn - 1 ? " disabled" : ""}>Next version &rarr;</button></div>` : "";
       const clear = ui.clarity ? `<div class="gc-clear"><p class="gc-tiny">Clearer wording (same cards)</p><p class="gc-clear-t">${esc(sentence())}</p></div>` : "";
       const ok = hasMandatory(s);
       return `<div class="gc-scr">${hud("assemble")}
         <h2 class="gc-title" tabindex="-1">Assemble your future</h2>
-        <p class="gc-sub">The cards and the sentence are one thing. Choose a card in any gap to change it.${ok ? "" : " An issue and a method of learning are needed to continue."}</p>
+        <p class="gc-sub">Fill each gap with a card. Tap a gap to choose one.</p>
+        ${ok ? "" : `<div class="gc-callout" role="status"><span>${esc(needText())}</span><button type="button" class="gc-go gc-sm" data-act="need" data-nav>Choose ${esc(NEED[missing()[0].key])}</button></div>`}
         <div class="gc-canvas" role="group" aria-label="Your future so far"><p class="gc-sentence">${parts}</p>${strip ? `<ul class="gc-strip" aria-hidden="true">${strip}</ul>` : ""}</div>
         ${clear}
         <div class="gc-tools" role="group" aria-label="Tools">
-          <button type="button" class="gc-ghost gc-sm" data-act="random" data-nav>Draw randomly</button>
-          <button type="button" class="gc-ghost gc-sm" data-act="${ui.clarity ? "unclarify" : "clarify"}" data-nav${ok ? "" : " disabled"}>${ui.clarity ? "Use my original wording" : "Make clearer"}</button>
-          <button type="button" class="gc-ghost gc-sm" data-act="version" data-nav${ok ? "" : " disabled"}>Explore a different version</button>
-          <button type="button" class="gc-ghost gc-sm" data-act="details" data-nav aria-expanded="${ui.showDetails}">Add more details</button>
+          <button type="button" class="gc-ghost gc-sm" data-act="random" data-nav>${SLOTS.some((x) => !s[x.key].length) ? "Fill the empty gaps" : "Shuffle my cards"}</button>
+          <button type="button" class="gc-ghost gc-sm" data-act="more-tools" data-nav aria-expanded="${moreOpen}">${moreOpen ? "Fewer options" : "More options"}</button>
         </div>
+        ${moreOpen ? `<ul class="gc-more">
+          <li><button type="button" class="gc-ghost gc-sm" data-act="${ui.clarity ? "unclarify" : "clarify"}" data-nav>${ui.clarity ? "Use my original wording" : "Make clearer"}</button><span>${ui.clarity ? "Go back to the sentence as it was." : "Smooths the sentence. Your cards stay the same."}</span></li>
+          <li><button type="button" class="gc-ghost gc-sm" data-act="version" data-nav>Explore a different version</button><span>Try another combination. Your current one is kept.</span></li>
+          <li><button type="button" class="gc-ghost gc-sm" data-act="details" data-nav aria-expanded="${ui.showDetails}">Add more details</button><span>Write your own thoughts about it.</span></li>
+        </ul>` : ""}
         ${versions}
         ${ui.showDetails ? `<label class="gc-field gc-wide"><span>Your own thoughts on this combination <i>(optional)</i></span><textarea data-details rows="3" maxlength="800" placeholder="Anything you want to add">${esc(play.details)}</textarea></label>` : ""}
-        <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="continue" data-nav data-primary${ok ? "" : " disabled"}>Continue</button></div>
+        <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="continue" data-nav data-primary>Continue</button></div>
       </div>`;
     },
 
@@ -258,7 +294,7 @@ function init() {
       return `<div class="gc-scr">${hud("imagine")}
         <h2 class="gc-title" tabindex="-1">Imagine what it could mean</h2>
         <p class="gc-recap">${esc(sentence())}</p>
-        <p class="gc-sub">Every question is optional. Answer what you like and skip the rest.</p>
+        <p class="gc-sub">Optional. Answer what you like and skip the rest.</p>
         ${shown}${reveal ? `<div class="gc-tools">${reveal}</div>` : ""}${nudges}
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="create" data-nav data-primary>Create my scenario</button></div>
       </div>`;
@@ -270,7 +306,7 @@ function init() {
       const field = (f) => `<div class="gc-fb"><div class="gc-fb-h"><label for="f-${f}">${names[f]}</label><button type="button" class="gc-ghost gc-sm" data-act="regen" data-field="${f}" data-nav aria-label="Regenerate ${names[f].toLowerCase()}">Regenerate</button></div><p class="gc-fine" id="h-${f}">${hints[f]}${play.edited.includes(f) ? " You have edited this." : ""}</p><textarea id="f-${f}" data-field="${f}" rows="${f === "title" ? 1 : 3}" maxlength="${f === "title" ? 120 : 400}" aria-describedby="h-${f}">${esc(play.scenario[f])}</textarea></div>`;
       return `<div class="gc-scr">${hud("describe")}
         <h2 class="gc-title" tabindex="-1">Describe your future</h2>
-        <p class="gc-sub">Written from your cards and your own words. Change any part by typing in it; regenerating one part keeps your edits to the others. It describes something imagined, not a prediction.</p>
+        <p class="gc-sub">Written from your cards and your words. Type to change anything; Regenerate gives new wording for that part only. This is an imagined future, not a prediction.</p>
         ${FIELDS.map(field).join("")}
         <div class="gc-tools"><button type="button" class="gc-ghost gc-sm" data-act="regen-all" data-nav>Regenerate all</button><button type="button" class="gc-ghost gc-sm" data-act="another" data-nav>Start another combination</button></div>
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="finish" data-nav data-primary>Finish and save</button></div>
@@ -301,20 +337,24 @@ function init() {
           <label class="gc-field gc-wide"><span>What was most useful, confusing, or missing in this activity?</span><textarea name="feedback" rows="3" maxlength="1000" placeholder="Your feedback (optional)">${esc(play.survey.feedback)}</textarea></label>
         </form>
 
-        <form class="gc-mail" novalidate aria-labelledby="mail-h">
-          <h3 class="gc-tiny" id="mail-h">Get your scenario by email <i>(optional)</i></h3>
+        <details class="gc-fold gc-mailfold"><summary>Email me a copy <i>(optional)</i></summary>
+        <form class="gc-mail" novalidate aria-label="Email me a copy">
           <p class="gc-sub">${esc(EMAIL_PURPOSE)}</p>
           <label class="gc-field"><span>Your email address</span><input type="email" name="email" autocomplete="email" inputmode="email" maxlength="120" placeholder="you@gmail.com" value="${esc(play.player?.email ?? "")}"></label>
           <label class="gc-check"><input type="checkbox" name="consent"><span>Send me my scenario, and let the research team keep my email address.</span></label>
           <button type="submit" class="gc-ghost" data-nav>Email my scenario</button>
           <p class="gc-mailmsg" role="status"></p>
         </form>
+        </details>
         <div class="gc-acts"><button type="button" class="gc-go" data-act="again" data-nav>Start another combination</button></div>
       </div>`;
     },
   };
 
-  function render() { screen.innerHTML = screens[ui.step](); }
+  function render() {
+    screen.innerHTML = screens[ui.step]();
+    if (ui.step === "library") screen.querySelector('.gc-trk[aria-current="step"]')?.scrollIntoView({ inline: "center", block: "nearest" });
+  }
 
   // ------------------------------------------------------------------ actions
   function start() {
@@ -323,7 +363,7 @@ function init() {
     else play = newPlay(ui.group, ui.profile, { pre: ui.pre });
     t0 = Date.now();
     ui.versions = [copySel(sel())]; ui.vcur = 0; ui.locked = {}; ui.clarity = 0; ui.groups = 1; ui.nudges = {};
-    ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.choose = null; ui.showDetails = false;
+    ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.choose = null; ui.showDetails = false; ui.moreTools = false;
     persist();
     go("discover");
   }
@@ -462,10 +502,18 @@ function init() {
     else if (act === "lib-deck") { ui.libDeck = d.deck; render(); focusAfter(`[data-act="lib-deck"][data-deck="${d.deck}"]`); }
     else if (act === "open-card") { const i = cardsOf(d.deck).findIndex((x) => x.id === d.id); openChooser(d.deck, i, `.gc-tile[data-id="${d.id}"]`); }
     else if (act === "remove-card") { removeCard(d.deck, d.id); render(); announce(`${cardOf(d.deck, d.id).name} removed.`); }
-    else if (act === "to-assemble") go("assemble");
+    else if (act === "to-assemble") { if (!countCards(sel())) { announce("Choose at least one card first."); openChooser(ui.libDeck, 0, `[data-act="to-assemble"]`); } else go("assemble"); }
+    else if (act === "track") { ui.libDeck = d.deck; render(); focusAfter(`[data-act="track"][data-deck="${d.deck}"]`); }
+    else if (act === "need") guideToMissing();
+    else if (act === "skip") {
+      const i = SLOTS.findIndex((x) => x.deck === ui.libDeck);
+      const next = [...SLOTS.slice(i + 1), ...SLOTS.slice(0, i)].find((x) => !sel()[x.key].length);
+      if (next) { ui.libDeck = next.deck; render(); announce(`${SLOT_BY_DECK[next.deck].ask}.`); focusAfter(".gc-deckhint"); } else go("assemble");
+    }
     else if (act === "slot") { const slot = SLOTS.find((x) => x.key === d.slot); const first = sel()[slot.key][0]; openChooser(slot.deck, first ? cardsOf(slot.deck).findIndex((x) => x.id === first) : 0, `[data-act="slot"][data-slot="${slot.key}"]`); }
     else if (act === "ch-go") { paintDetail(+d.idx); }
     else if (act === "ch-prev" || act === "ch-next") { const n = cardsOf(ui.choose.deck).length; paintDetail((ui.choose.idx + (act === "ch-next" ? 1 : -1) + n) % n); overlay.querySelector(`[data-act="${act}"]`)?.focus({ preventScroll: true }); overlay.querySelector('.gc-ch-item[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    else if (act === "ch-keep") { const { deck, idx } = ui.choose; const k = key(deck, cardsOf(deck)[idx].id); if (ui.locked[k]) delete ui.locked[k]; else { ui.locked[k] = true; play.stats.locks += 1; } paintDetail(idx); overlay.querySelector('[data-act="ch-keep"]')?.focus({ preventScroll: true }); announce(ui.locked[k] ? "This card will stay when you shuffle." : "This card can change when you shuffle."); }
     else if (act === "ch-choose") chooseCurrent();
     else if (act === "ch-done") closeChooser();
     else if (act === "lock") {
@@ -473,12 +521,13 @@ function init() {
       render(); focusAfter(`.gc-lock[data-id="${d.id}"]`); announce(ui.locked[k] ? "Card locked." : "Card unlocked.");
     }
     else if (act === "random") { drawRandom(); render(); focusAfter('[data-act="random"]'); }
-    else if (act === "clarify") { ui.clarity = (ui.clarity % CLEAR_VARIANTS) + 1; play.stats.clarified += 1; commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed."); }
+    else if (act === "clarify") { if (guideToMissing()) return; ui.clarity = (ui.clarity % CLEAR_VARIANTS) + 1; play.stats.clarified += 1; commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed."); }
     else if (act === "unclarify") { ui.clarity = 0; commit(); render(); focusAfter('[data-act="clarify"]'); }
-    else if (act === "version") { newVersionFrom(randomHand(sel(), ui.locked, Math.random, { fresh: true })); render(); focusAfter('[data-act="version"]'); announce(`Version ${ui.vcur + 1}. Your earlier version is kept.`); }
+    else if (act === "version") { if (guideToMissing()) return; newVersionFrom(randomHand(sel(), ui.locked, Math.random, { fresh: true })); render(); focusAfter('[data-act="version"]'); announce(`Version ${ui.vcur + 1}. Your earlier version is kept.`); }
     else if (act === "ver-prev" || act === "ver-next") { ui.vcur += act === "ver-next" ? 1 : -1; play.picks = copySel(ui.versions[ui.vcur]); commit(); render(); focusAfter(`[data-act="${act}"]`); announce(`Version ${ui.vcur + 1} of ${ui.versions.length}.`); }
+    else if (act === "more-tools") { ui.moreTools = !ui.moreTools; render(); focusAfter('[data-act="more-tools"]'); }
     else if (act === "details") { ui.showDetails = !ui.showDetails; render(); if (ui.showDetails) focusAfter("[data-details]"); }
-    else if (act === "continue") { play.sentence = sentence(); commit(); go("imagine"); }
+    else if (act === "continue") { if (guideToMissing()) return; play.sentence = sentence(); commit(); go("imagine"); }
     else if (act === "more") { ui.groups = Math.min(3, ui.groups + 1); render(); focusAfter(`.gc-group:nth-of-type(${ui.groups}) textarea`); }
     else if (act === "nudge") { const i = +d.i; if (i in ui.nudges) delete ui.nudges[i]; else ui.nudges[i] = ""; render(); focusAfter(i in ui.nudges ? `[data-nudge="${i}"]` : `[data-act="nudge"][data-i="${i}"]`); }
     else if (act === "create") toDescribe();
