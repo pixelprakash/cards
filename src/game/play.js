@@ -10,7 +10,8 @@ import { newPlay, save, cleanPlayer } from "./store.js";
 
 const root = document.getElementById("console");
 const screen = document.getElementById("screen");
-if (root && screen) init();
+const overlay = document.getElementById("overlay");
+if (root && screen && overlay) init();
 
 function init() {
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -20,8 +21,8 @@ function init() {
 
   const ui = {
     step: "you", group: "", profile: null, pre: null,
-    libDeck: "issue", libMode: "explore", openCard: null, openSlot: null,
-    showDetails: false, preview: null, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
+    libDeck: "issue", libMode: "explore", choose: null, chooseOpener: "",
+    showDetails: false, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
     versions: [], vcur: 0, locked: {}, stepAt: Date.now(),
   };
   let play = null;
@@ -45,6 +46,7 @@ function init() {
   }
 
   function go(step, { focus = true } = {}) {
+    if (ui.choose) { ui.choose = null; overlay.hidden = true; overlay.innerHTML = ""; screen.inert = false; }
     leaveStep();
     ui.step = step;
     ui.stepAt = Date.now();
@@ -73,42 +75,95 @@ function init() {
     return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}>${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
   };
 
-  // The reading panel: the card large, with its text in real type.
-  const readCard = (deck, id) => {
-    const c = id && cardOf(deck, id);
-    if (!c) return `<p class="gc-pk-empty">Point at a card, or tap one, to read it here.</p>`;
-    return `<img src="${c.img}" alt="" width="600" height="1050" decoding="async"><div class="gc-pk-text"><p class="gc-kicker">${esc(DECKS[deck].noun)}</p><h4>${esc(c.name)}</h4>${c.desc ? `<p>${esc(c.desc)}</p>` : ""}</div>`;
-  };
-
   function comboBar() {
     const chips = SLOTS.flatMap((s) => sel()[s.key].map((id) => ({ s, c: cardOf(s.deck, id) })));
     if (!chips.length) return `<p class="gc-fine">No cards in your combination yet.</p>`;
     return `<ul class="gc-combo" aria-label="Your combination">${chips.map(({ s, c }) => `<li data-deck="${s.deck}"><span>${esc(c.name)}</span><button type="button" data-act="remove-card" data-deck="${s.deck}" data-id="${c.id}" data-nav aria-label="Remove ${esc(c.name)}">&times;</button></li>`).join("")}</ul>`;
   }
 
-  function sheet() {
-    if (!ui.openCard) return "";
-    const { deck, id } = ui.openCard;
-    const c = cardOf(deck, id);
-    const slot = SLOT_BY_DECK[deck];
-    const inSel = sel()[slot.key].includes(id);
-    const full = !inSel && slot.max > 1 && sel()[slot.key].length >= slot.max;
-    const alt = `${c.name}, ${DECKS[deck].noun}.${c.desc ? ` ${c.desc}` : ""}`;
-    return `<div class="gc-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h">
-      <div class="gc-sheet-in">
-        <img src="${c.img}" alt="${esc(alt)}" width="600" height="1050" decoding="async">
-        <div class="gc-sheet-text">
-          <p class="gc-kicker">${esc(DECKS[deck].noun)}</p>
-          <h3 id="sheet-h" class="gc-sheet-h" tabindex="-1">${esc(c.name)}</h3>
-          ${c.desc ? `<p class="gc-sub">${esc(c.desc)}</p>` : ""}
-          ${full ? `<p class="gc-fine">You already have ${slot.max} ${esc(slot.label.toLowerCase())} cards. Remove one to add this.</p>` : ""}
-          <div class="gc-acts">
-            <button type="button" class="gc-ghost" data-act="close-card" data-nav>Back to the cards</button>
-            <button type="button" class="gc-go" data-act="${inSel ? "remove-card" : "add-card"}" data-deck="${deck}" data-id="${id}" data-nav data-primary${full ? " disabled" : ""}>${inSel ? "Remove from my combination" : slot.max === 1 && sel()[slot.key].length ? "Use this card instead" : "Add to my combination"}</button>
-          </div>
+  // ------------------------------------------------------------------ the card chooser
+  // A full-height panel over the screen, like a deck picker: a plain list of names on one side, the card large with its
+  // text in real type on the other, and one clear button to choose it. Used by Assemble and by the library.
+  const chosenIn = (deck) => sel()[SLOT_BY_DECK[deck].key];
+  function statusText() {
+    const { deck } = ui.choose, slot = SLOT_BY_DECK[deck], chosen = chosenIn(deck);
+    const names = chosen.map((id) => cardOf(deck, id)?.name).filter(Boolean);
+    if (slot.max > 1) return `${chosen.length} of ${slot.max} chosen${names.length ? `: ${names.join(", ")}` : ""}`;
+    return names.length ? `Chosen: ${names[0]}` : "Nothing chosen yet";
+  }
+  function detailHTML() {
+    const { deck, idx } = ui.choose, slot = SLOT_BY_DECK[deck], cards = cardsOf(deck), c = cards[idx], chosen = chosenIn(deck);
+    const on = chosen.includes(c.id), locked = !!ui.locked[key(deck, c.id)];
+    const full = !on && slot.max > 1 && chosen.length >= slot.max;
+    const swapLocked = !on && slot.max === 1 && chosen[0] && ui.locked[key(deck, chosen[0])];
+    const note = swapLocked ? "The card in this gap is locked. Unlock it to choose another." : full ? `You already have ${slot.max}. Remove one to add this.` : on && locked ? "This card is locked. Unlock it to remove it." : "";
+    const label = on ? "Remove this card" : slot.max === 1 && chosen.length ? "Use this card instead" : "Choose this card";
+    return `<div class="gc-ch-card"><img src="${c.img}" alt="" width="600" height="1050" decoding="async"></div>
+      <div class="gc-ch-text">
+        <p class="gc-kicker">${esc(DECKS[deck].noun)} &middot; ${idx + 1} of ${cards.length}</p>
+        <h3>${esc(c.name)}</h3>
+        <p class="gc-ch-desc${c.desc ? "" : " gc-ch-none"}">${c.desc ? esc(c.desc) : "This card shows a place and has no printed description."}</p>
+        ${note ? `<p class="gc-fine">${esc(note)}</p>` : ""}
+        <div class="gc-ch-nav">
+          <button type="button" class="gc-ch-step" data-act="ch-prev" data-nav aria-label="Previous card">&larr;</button>
+          <button type="button" class="gc-go gc-ch-choose" data-act="ch-choose" data-nav data-primary${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
+          <button type="button" class="gc-ch-step" data-act="ch-next" data-nav aria-label="Next card">&rarr;</button>
         </div>
-      </div>
+      </div>`;
+  }
+  function chooserHTML() {
+    const { deck, idx } = ui.choose, slot = SLOT_BY_DECK[deck], chosen = chosenIn(deck);
+    const list = cardsOf(deck).map((x, i) => `<li><button type="button" class="gc-ch-item${chosen.includes(x.id) ? " is-on" : ""}" data-act="ch-go" data-idx="${i}" data-nav${i === idx ? ' aria-current="true"' : ""}><span class="gc-ch-name">${esc(x.name)}</span>${chosen.includes(x.id) ? '<span class="gc-ch-tick" aria-hidden="true">&#10003;</span><span class="vh"> (chosen)</span>' : ""}</button></li>`).join("");
+    return `<div class="gc-ch" role="dialog" aria-modal="true" aria-labelledby="ch-h" data-deck="${deck}">
+      <header class="gc-ch-top"><div><p class="gc-kicker">${esc(DECKS[deck].name)}</p><h2 id="ch-h" class="gc-ch-h" tabindex="-1">${esc(slot.ask)}</h2><p class="gc-ch-status" data-status>${esc(statusText())}</p></div><button type="button" class="gc-go gc-sm" data-act="ch-done" data-nav>Done</button></header>
+      <div class="gc-ch-body"><ul class="gc-ch-list" aria-label="${esc(DECKS[deck].name)}">${list}</ul><div class="gc-ch-detail" data-detail>${detailHTML()}</div></div>
     </div>`;
+  }
+  const chList = () => overlay.querySelector(".gc-ch-list");
+  function openChooser(deck, idx, opener) {
+    ui.choose = { deck, idx: Math.max(0, idx) };
+    ui.chooseOpener = opener;
+    overlay.innerHTML = chooserHTML();
+    overlay.hidden = false;
+    screen.inert = true;
+    const cur = overlay.querySelector('.gc-ch-item[aria-current="true"]');
+    cur?.focus({ preventScroll: true });
+    cur?.scrollIntoView({ block: "center", inline: "center" });
+  }
+  function closeChooser({ restore = true } = {}) {
+    if (!ui.choose) return;
+    ui.choose = null;
+    overlay.hidden = true;
+    overlay.innerHTML = "";
+    screen.inert = false;
+    render();
+    if (restore && ui.chooseOpener) focusAfter(ui.chooseOpener);
+  }
+  // swap the card shown on the right without rebuilding the list (keeps scroll and focus)
+  function paintDetail(idx) {
+    ui.choose.idx = idx;
+    overlay.querySelector("[data-detail]").innerHTML = detailHTML();
+    overlay.querySelectorAll(".gc-ch-item").forEach((b, i) => (i === idx ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")));
+  }
+  // rebuild everything (after a card was chosen or removed), keeping the list where it was
+  function repaintChooser(focusSel) {
+    const l = chList(), top = l.scrollTop, left = l.scrollLeft;
+    overlay.innerHTML = chooserHTML();
+    const l2 = chList(); l2.scrollTop = top; l2.scrollLeft = left;
+    if (focusSel) overlay.querySelector(focusSel)?.focus({ preventScroll: true });
+  }
+  function chooseCurrent() {
+    const { deck, idx } = ui.choose, slot = SLOT_BY_DECK[deck], c = cardsOf(deck)[idx];
+    const on = chosenIn(deck).includes(c.id);
+    if (on) { removeCard(deck, c.id); announce(`${c.name} removed.`); repaintChooser('[data-act="ch-choose"]'); return; }
+    if (slot.max === 1) {
+      const old = chosenIn(deck)[0];
+      if (old && ui.locked[key(deck, old)]) return;
+      if (old) delete ui.locked[key(deck, old)];
+    }
+    if (!addCard(deck, c.id)) { announce(`You can have up to ${slot.max}. Remove one first.`); return; }
+    announce(`${c.name} chosen.`);
+    if (slot.max === 1) closeChooser(); else repaintChooser('[data-act="ch-choose"]');
   }
 
   // ------------------------------------------------------------------ screens
@@ -157,7 +212,6 @@ function init() {
         <ul class="gc-grid">${cardsOf(deck).map((c) => `<li>${tile(deck, c)}</li>`).join("")}</ul>
         <div class="gc-mine"><h3 class="gc-tiny">Your combination</h3>${comboBar()}</div>
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back to Discover</button><button type="button" class="gc-go" data-act="to-assemble" data-nav data-primary${countCards(sel()) ? "" : " disabled"}>Continue to Assemble</button></div>
-        ${sheet()}
       </div>`;
     },
 
@@ -175,19 +229,6 @@ function init() {
       }).join("");
 
       const strip = SLOTS.flatMap((x) => s[x.key].map((id) => cardOf(x.deck, id))).map((c) => `<li><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="9rem" alt="" width="300" height="525" loading="lazy"></li>`).join("");
-      const open = ui.openSlot && SLOTS.find((x) => x.key === ui.openSlot);
-      const prevId = ui.preview && ui.preview.deck === open?.deck ? ui.preview.id : s[open?.key]?.[0];
-      const picker = open ? `<div class="gc-picker" aria-label="${esc(open.ask)}"><h3 class="gc-tiny" id="picker-h" tabindex="-1">${esc(open.ask)}</h3>
-        <div class="gc-picker-body">
-          <div class="gc-pk-prev" data-preview aria-live="polite">${readCard(open.deck, prevId)}</div>
-          <ul class="gc-grid gc-grid-sm">${cardsOf(open.deck).map((c) => {
-            const inSel = s[open.key].includes(c.id), lk = ui.locked[key(open.deck, c.id)];
-            const blocked = lk || (!inSel && open.max > 1 && s[open.key].length >= open.max);
-            return `<li><button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="pick" data-deck="${open.deck}" data-id="${c.id}" data-nav aria-pressed="${inSel}"${blocked ? ` aria-disabled="true" title="${lk ? "Unlock this card to replace it" : "Remove one card first"}"` : ""} aria-label="${esc(c.name)}${c.desc ? `. ${esc(c.desc)}` : ""}">${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button></li>`;
-          }).join("")}</ul>
-        </div>
-        <div class="gc-acts"><button type="button" class="gc-ghost" data-act="close-picker" data-nav>Done choosing</button></div></div>` : "";
-
       const vn = ui.versions.length;
       const versions = vn > 1 ? `<div class="gc-versions" role="group" aria-label="Versions"><button type="button" class="gc-ghost gc-sm" data-act="ver-prev" data-nav${ui.vcur === 0 ? " disabled" : ""}>&larr; Previous version</button><span>Version ${ui.vcur + 1} of ${vn}</span><button type="button" class="gc-ghost gc-sm" data-act="ver-next" data-nav${ui.vcur === vn - 1 ? " disabled" : ""}>Next version &rarr;</button></div>` : "";
       const clear = ui.clarity ? `<div class="gc-clear"><p class="gc-tiny">Clearer wording (same cards)</p><p class="gc-clear-t">${esc(sentence())}</p></div>` : "";
@@ -196,7 +237,7 @@ function init() {
         <h2 class="gc-title" tabindex="-1">Assemble your future</h2>
         <p class="gc-sub">The cards and the sentence are one thing. Choose a card in any gap to change it.${ok ? "" : " An issue and a method of learning are needed to continue."}</p>
         <div class="gc-canvas" role="group" aria-label="Your future so far"><p class="gc-sentence">${parts}</p>${strip ? `<ul class="gc-strip" aria-hidden="true">${strip}</ul>` : ""}</div>
-        ${clear}${picker}
+        ${clear}
         <div class="gc-tools" role="group" aria-label="Tools">
           <button type="button" class="gc-ghost gc-sm" data-act="random" data-nav>Draw randomly</button>
           <button type="button" class="gc-ghost gc-sm" data-act="${ui.clarity ? "unclarify" : "clarify"}" data-nav${ok ? "" : " disabled"}>${ui.clarity ? "Use my original wording" : "Make clearer"}</button>
@@ -282,7 +323,7 @@ function init() {
     else play = newPlay(ui.group, ui.profile, { pre: ui.pre });
     t0 = Date.now();
     ui.versions = [copySel(sel())]; ui.vcur = 0; ui.locked = {}; ui.clarity = 0; ui.groups = 1; ui.nudges = {};
-    ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.openSlot = null; ui.openCard = null; ui.showDetails = false;
+    ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.choose = null; ui.showDetails = false;
     persist();
     go("discover");
   }
@@ -398,14 +439,9 @@ function init() {
   }
 
   function back() {
-    if (ui.step === "library") {
-      if (ui.openCard) { ui.openCard = null; render(); return; }
-      go("discover"); return;
-    }
-    if (ui.step === "assemble") {
-      if (ui.openSlot) { ui.openSlot = null; render(); return; }
-      go("discover"); return;
-    }
+    if (ui.choose) { closeChooser(); return; }
+    if (ui.step === "library") { go("discover"); return; }
+    if (ui.step === "assemble") { go("discover"); return; }
     if (ui.step === "imagine") { go("assemble"); return; }
     if (ui.step === "describe") { go("imagine"); return; }
     if (ui.step === "discover" && !countCards(sel())) { go("you"); return; }
@@ -414,9 +450,9 @@ function init() {
   }
 
   // ------------------------------------------------------------------ events
-  const focusAfter = (selector) => requestAnimationFrame(() => screen.querySelector(selector)?.focus({ preventScroll: false }));
+  const focusAfter = (selector) => requestAnimationFrame(() => (ui.choose ? overlay : screen).querySelector(selector)?.focus({ preventScroll: false }));
 
-  screen.addEventListener("click", (e) => {
+  const onClick = (e) => {
     const b = e.target.closest("[data-act]");
     if (!b || b.disabled || b.getAttribute("aria-disabled") === "true") return;
     const act = b.dataset.act, d = b.dataset;
@@ -424,29 +460,14 @@ function init() {
     else if (act === "choose") { play.stats.mode = "choose"; ui.libMode = "choose"; ui.libDeck = "issue"; go("library"); }
     else if (act === "explore") { play.stats.mode = play.stats.mode || "explore"; ui.libMode = "explore"; go("library"); }
     else if (act === "lib-deck") { ui.libDeck = d.deck; render(); focusAfter(`[data-act="lib-deck"][data-deck="${d.deck}"]`); }
-    else if (act === "open-card") { ui.openCard = { deck: d.deck, id: d.id }; render(); screen.querySelector(".gc-sheet-h")?.focus(); }
-    else if (act === "close-card") { const o = ui.openCard; ui.openCard = null; render(); if (o) focusAfter(`.gc-tile[data-id="${o.id}"]`); }
-    else if (act === "add-card") { const o = ui.openCard; if (addCard(d.deck, d.id)) { ui.openCard = null; render(); announce(`${cardOf(d.deck, d.id).name} added.`); if (o) focusAfter(`.gc-tile[data-id="${o.id}"]`); } }
-    else if (act === "remove-card") { const o = ui.openCard; removeCard(d.deck, d.id); ui.openCard = null; render(); announce(`${cardOf(d.deck, d.id).name} removed.`); if (o) focusAfter(`.gc-tile[data-id="${o.id}"]`); }
+    else if (act === "open-card") { const i = cardsOf(d.deck).findIndex((x) => x.id === d.id); openChooser(d.deck, i, `.gc-tile[data-id="${d.id}"]`); }
+    else if (act === "remove-card") { removeCard(d.deck, d.id); render(); announce(`${cardOf(d.deck, d.id).name} removed.`); }
     else if (act === "to-assemble") go("assemble");
-    else if (act === "slot") { ui.openSlot = d.slot; ui.preview = null; render(); screen.querySelector("#picker-h")?.focus(); }
-    else if (act === "close-picker") { const k = ui.openSlot; ui.openSlot = null; render(); focusAfter(`[data-act="slot"][data-slot="${k}"]`); }
-    else if (act === "pick") {
-      const slot = SLOT_BY_DECK[d.deck], inSel = sel()[slot.key].includes(d.id);
-      ui.preview = { deck: d.deck, id: d.id };
-      if (inSel && slot.max === 1) { const q = screen.querySelector("[data-preview]"); if (q) q.innerHTML = readCard(d.deck, d.id); return; }
-      if (inSel) removeCard(d.deck, d.id);
-      else if (slot.max === 1) {
-        const old = sel()[slot.key][0];
-        if (old && ui.locked[key(d.deck, old)]) return;
-        if (old) delete ui.locked[key(d.deck, old)];
-        addCard(d.deck, d.id);
-      } else if (!addCard(d.deck, d.id)) { announce(`You can have up to ${slot.max}. Remove one first.`); return; }
-      const keepScroll = screen.scrollTop;
-      render(); screen.scrollTop = keepScroll;
-      screen.querySelector(`.gc-picker .gc-tile[data-id="${d.id}"]`)?.focus({ preventScroll: true });
-      announce(`${cardOf(d.deck, d.id).name} ${inSel ? "removed" : "chosen"}.`);
-    }
+    else if (act === "slot") { const slot = SLOTS.find((x) => x.key === d.slot); const first = sel()[slot.key][0]; openChooser(slot.deck, first ? cardsOf(slot.deck).findIndex((x) => x.id === first) : 0, `[data-act="slot"][data-slot="${slot.key}"]`); }
+    else if (act === "ch-go") { paintDetail(+d.idx); }
+    else if (act === "ch-prev" || act === "ch-next") { const n = cardsOf(ui.choose.deck).length; paintDetail((ui.choose.idx + (act === "ch-next" ? 1 : -1) + n) % n); overlay.querySelector(`[data-act="${act}"]`)?.focus({ preventScroll: true }); overlay.querySelector('.gc-ch-item[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" }); }
+    else if (act === "ch-choose") chooseCurrent();
+    else if (act === "ch-done") closeChooser();
     else if (act === "lock") {
       const k = key(d.deck, d.id); ui.locked[k] = !ui.locked[k]; if (!ui.locked[k]) delete ui.locked[k]; else play.stats.locks += 1;
       render(); focusAfter(`.gc-lock[data-id="${d.id}"]`); announce(ui.locked[k] ? "Card locked." : "Card unlocked.");
@@ -472,18 +493,19 @@ function init() {
     else if (act === "save-image") saveImage(b);
     else if (act === "copy") copyText(b);
     else if (act === "back") back();
-  });
-
-  // reading a card while pointing at or focusing it (picker): the panel shows it large
-  const showDetail = (e) => {
-    const b = e.target.closest?.(".gc-picker .gc-tile");
-    const panel = screen.querySelector("[data-preview]");
-    if (!b || !panel) return;
-    ui.preview = { deck: b.dataset.deck, id: b.dataset.id };
-    panel.innerHTML = readCard(b.dataset.deck, b.dataset.id);
   };
-  screen.addEventListener("pointerover", showDetail);
-  screen.addEventListener("focusin", showDetail);
+  screen.addEventListener("click", onClick);
+  overlay.addEventListener("click", onClick);
+
+  // pointing at or focusing a name in the chooser shows that card large
+  const preview = (e) => {
+    const b = e.target.closest?.(".gc-ch-item");
+    if (!b || !ui.choose || +b.dataset.idx === ui.choose.idx) return;
+    if (e.type === "pointerover" && overlay.querySelector("[data-detail]").contains(document.activeElement)) return;
+    paintDetail(+b.dataset.idx);
+  };
+  overlay.addEventListener("pointerover", preview);
+  overlay.addEventListener("focusin", preview);
 
   // forms: about you, survey, email
   async function sendReport(f) {
@@ -553,7 +575,8 @@ function init() {
 
   // ---- console controls: arrow keys / D-pad move between choices, A selects, B goes back
   function move(dir) {
-    const items = [...screen.querySelectorAll("[data-nav]")].filter((el) => !el.disabled && el.offsetParent !== null);
+    const scope = ui.choose ? overlay : screen;
+    const items = [...scope.querySelectorAll("[data-nav]")].filter((el) => !el.disabled && el.offsetParent !== null);
     if (!items.length) return;
     const cur = items.includes(document.activeElement) ? document.activeElement : null;
     if (!cur) { items[0].focus(); return; }
@@ -576,7 +599,8 @@ function init() {
 
   function press(a) {
     if (a === "ok") {
-      const el = screen.contains(document.activeElement) && document.activeElement.matches("[data-nav]") ? document.activeElement : screen.querySelector("[data-primary]:not([disabled])");
+      const scope = ui.choose ? overlay : screen;
+      const el = scope.contains(document.activeElement) && document.activeElement.matches("[data-nav]") ? document.activeElement : scope.querySelector("[data-primary]:not([disabled])");
       el?.click();
     } else if (a === "back") back();
     else move(a);

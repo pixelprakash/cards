@@ -29,10 +29,10 @@ export function sheetsHTML() {
   return DECK_ORDER.map((k, n) => {
     const d = DECKS[k];
     const code = CODE[k];
-    const sizes = "(min-width: 62rem) 12.5rem, 9rem";
-    const face = (c) => `<li class="rcard"><img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="${sizes}" alt="" width="300" height="525" loading="lazy" decoding="async"><span class="rcap">${esc(c.name)}</span></li>`;
-    const back = `<li class="rcard rback" aria-hidden="true"><img src="${d.coverSm}" alt="" width="300" height="525" loading="lazy" decoding="async"><span class="rcap">The deck</span></li>`;
-    return `<article class="sheet" data-deck="${k}" style="--n:${n}"><div class="tab"><span class="tab-code">${esc(code)}</span>${esc(d.name)}</div><div class="sheet-body"><div class="copy"><h2>${esc(d.name)}</h2><p>${esc(d.blurb)}</p><p class="count"><b>${d.cards.length}</b> cards</p></div><div class="rail-wrap"><div class="rail" role="region" tabindex="0" aria-label="${esc(d.name)}: ${d.cards.length} cards. Scroll sideways."><ul>${back}${d.cards.map(face).join("")}</ul></div><div class="rail-nav"><button type="button" data-rail="-1" aria-label="Show earlier ${esc(d.name)} cards">&larr;</button><button type="button" data-rail="1" aria-label="Show more ${esc(d.name)} cards">&rarr;</button></div></div></div></article>`;
+    const faces = [d.cards[0], d.cards[Math.floor(d.cards.length / 2)]];
+    const im = (src, srcset) => `<img src="${src}"${srcset ? ` srcset="${srcset}" sizes="14rem"` : ""} alt="" width="300" height="525" loading="lazy" decoding="async">`;
+    const art = `<div class="deck-art" aria-hidden="true"><span class="da da-l">${im(faces[0].sm, `${faces[0].sm} 300w, ${faces[0].img} 600w`)}</span><span class="da da-r">${im(faces[1].sm, `${faces[1].sm} 300w, ${faces[1].img} 600w`)}</span><span class="da da-f">${im(d.coverSm, `${d.coverSm} 300w, ${d.cover} 600w`)}</span></div>`;
+    return `<article class="sheet" data-deck="${k}" style="--n:${n}"><div class="tab"><span class="tab-code">${esc(code)}</span>${esc(d.name)}</div><div class="sheet-body"><div class="copy"><h2>${esc(d.name)}</h2><p>${esc(d.blurb)}</p><p class="count"><b>${d.cards.length}</b> cards</p><a class="sheet-link" href="#cards-all" data-browse="${k}">Browse the ${d.cards.length} cards <span aria-hidden="true">&rarr;</span><span class="vh"> of ${esc(d.name)}</span></a></div>${art}</div></article>`;
   }).join("");
 }
 

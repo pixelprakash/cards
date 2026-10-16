@@ -69,7 +69,7 @@ if (decksEl) {
     decksEl.classList.remove("flow");
     const clipped = sheets.some((s) => {
       const bottom = s.getBoundingClientRect().bottom;
-      return [$(".copy", s), $(".rail-wrap", s)].some((el) => el && el.getBoundingClientRect().bottom > bottom - 4);
+      return [$(".copy", s), $(".deck-art", s)].some((el) => el && el.getBoundingClientRect().bottom > bottom - 4);
     });
     if (clipped) decksEl.classList.add("flow");
   };
@@ -96,12 +96,9 @@ if (links.length && "IntersectionObserver" in window) {
   byId.forEach((_, id) => { const el = document.getElementById(id); if (el) io.observe(el); });
 }
 
-// ---- card rails: the arrow buttons scroll a deck's row of cards ----
-$$("[data-rail]").forEach((btn) =>
-  btn.addEventListener("click", () => {
-    const rail = btn.closest(".rail-wrap").querySelector(".rail");
-    rail.scrollBy({ left: Number(btn.dataset.rail) * rail.clientWidth * 0.8, behavior: reduceMotion ? "auto" : "smooth" });
-  })
+// ---- "Browse the cards" on a deck sheet: filter the gallery to that deck, then scroll to it ----
+$$("[data-browse]").forEach((a) =>
+  a.addEventListener("click", () => $(`[data-filter="${a.dataset.browse}"]`)?.click())
 );
 
 // ---- the quote: words light up as it scrolls through the viewport ----
