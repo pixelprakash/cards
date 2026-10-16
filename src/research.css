@@ -74,3 +74,7 @@
 .ex-cards img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1050; border-radius: 0.4rem; box-shadow: 0 8px 12px -8px rgba(16, 14, 10, 0.55); }
 .ex-text { margin: 0; padding-left: 1rem; border-left: 4px solid var(--ink); font: italic 400 clamp(1.15rem, 1rem + 0.7vw, 1.5rem)/1.5 var(--serif); }
 .method-copy h2 em { font-family: var(--serif); font-weight: 400; }
+
+/* Hero and closing buttons: the same size as the navbar Play button */
+.rhero-acts .hero-play, .rhero-acts .btn, .closing-acts .hero-play { min-height: 3.5rem; padding: 0 1.9rem; font: 700 1.125rem/1 var(--sans); gap: 0.7rem; }
+.rhero-acts { gap: 1rem 1.1rem; margin-top: 2.25rem; }
