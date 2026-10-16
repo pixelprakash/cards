@@ -4,7 +4,7 @@
 // Every play is recorded through ./store.js for the researcher view. No AI: all wording is rule-based (./sentence.js).
 
 import { DECKS, DECK_KEYS, cardsOf, cardOf } from "./cards.js";
-import { STEPS, SLOTS, SLOT_BY_DECK, GROUPS, NUDGES, AGE_BANDS, GENDERS, CONSENT, EMAIL_PURPOSE } from "./config.js";
+import { STEPS, SLOTS, SLOT_BY_DECK, GROUPS, NUDGES, AGE_BANDS, GENDERS, CONSENT, EMAIL_PURPOSE, AI_NOTE } from "./config.js";
 import { emptySelection, copySel, hasMandatory, countCards, sentenceParts, sentenceText, CLEAR_VARIANTS, draftField, draftAll, FIELDS, randomHand } from "./sentence.js";
 import { newPlay, save, cleanPlayer } from "./store.js";
 
@@ -22,7 +22,7 @@ function init() {
   const ui = {
     step: "you", group: "", profile: null, pre: null,
     libDeck: "issue", libMode: "explore", choose: null, chooseOpener: "", choseNow: false,
-    showDetails: false, moreTools: false, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
+    showDetails: false, moreTools: false, ai: null, aiBusy: false, aiFields: new Set(), aiN: { title: 0, idea: 0, difference: 0, all: 0 }, clearAI: "", clearAIKey: "", clearN: 0, clarity: 0, groups: 1, nudges: {}, gen: { title: 0, idea: 0, difference: 0 }, draftKey: "",
     versions: [], vcur: 0, locked: {}, stepAt: Date.now(),
   };
   let play = null;
@@ -38,7 +38,7 @@ function init() {
     return `<ol class="gc-hud" aria-label="Progress">${STEPS.map((s, i) => `<li class="${i < at ? "is-done" : ""}${i === at ? " is-on" : ""}"${i === at ? ' aria-current="step"' : ""}><span class="n">${i + 1}</span><span class="l">${s.label}</span></li>`).join("")}</ol>`;
   };
   const persist = (opts) => { if (play) save(play, opts); };
-  const sentence = () => sentenceText(sel(), ui.clarity);
+  const sentence = () => (ui.clearAI && ui.clearAIKey === JSON.stringify(sel()) ? ui.clearAI : sentenceText(sel(), ui.clarity));
 
   function leaveStep() {
     if (!play) return;
@@ -231,6 +231,7 @@ function init() {
         <details class="gc-fold"${ui.group ? " open" : ""}><summary>Part of a workshop? Add a group code</summary><label class="gc-field"><span>Group or workshop code</span><input name="group" maxlength="24" autocomplete="off" value="${esc(ui.group)}"></label></details>
         <p class="gc-err" id="you-err" role="alert"></p>
         <p class="gc-fine">${esc(CONSENT)}</p>
+        <p class="gc-fine" id="ai-consent"${ui.ai ? "" : " hidden"}>${esc(AI_NOTE)}</p>
         <div class="gc-acts"><a class="gc-ghost" href="/" data-nav>Leave</a><button type="submit" class="gc-go" data-nav data-primary>Start playing</button></div>
       </form>`;
     },
@@ -281,7 +282,7 @@ function init() {
       const vn = ui.versions.length;
       const moreOpen = ui.moreTools || ui.clarity || vn > 1 || ui.showDetails;
       const versions = vn > 1 ? `<div class="gc-versions" role="group" aria-label="Versions"><button type="button" class="gc-ghost gc-sm" data-act="ver-prev" data-nav${ui.vcur === 0 ? " disabled" : ""}>&larr; Previous version</button><span>Version ${ui.vcur + 1} of ${vn}</span><button type="button" class="gc-ghost gc-sm" data-act="ver-next" data-nav${ui.vcur === vn - 1 ? " disabled" : ""}>Next version &rarr;</button></div>` : "";
-      const clear = ui.clarity ? `<div class="gc-clear"><p class="gc-tiny">Clearer wording (same cards)</p><p class="gc-clear-t">${esc(sentence())}</p></div>` : "";
+      const clear = ui.clarity ? `<div class="gc-clear"><p class="gc-tiny">Clearer wording (same cards)${ui.clearAI && ui.clearAIKey === JSON.stringify(s) ? ' <span class="gc-aitag">written with AI help</span>' : ""}</p><p class="gc-clear-t">${esc(sentence())}</p></div>` : "";
       const ok = hasMandatory(s);
       return `<div class="gc-scr">${hud("assemble")}
         <h2 class="gc-title" tabindex="-1">Assemble your future</h2>
@@ -313,6 +314,7 @@ function init() {
         <h2 class="gc-title" tabindex="-1">Imagine what it could mean</h2>
         <p class="gc-recap">${esc(sentence())}</p>
         <p class="gc-sub">Optional. Answer what you like and skip the rest.</p>
+        ${ui.ai ? `<p class="gc-fine">${esc(AI_NOTE)}</p>` : ""}
         ${shown}${reveal ? `<div class="gc-tools">${reveal}</div>` : ""}${nudges}
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="create" data-nav data-primary>Create my scenario</button></div>
       </div>`;
@@ -321,11 +323,13 @@ function init() {
     describe() {
       const names = { title: "Title", idea: "The idea", difference: "The difference" };
       const hints = { title: "A short, memorable name for the imagined future.", idea: "One sentence about the future learning environment.", difference: "The main departure from present arrangements." };
-      const field = (f) => `<div class="gc-fb"><div class="gc-fb-h"><label for="f-${f}">${names[f]}</label><button type="button" class="gc-ghost gc-sm" data-act="regen" data-field="${f}" data-nav aria-label="Regenerate ${names[f].toLowerCase()}">Regenerate</button></div><p class="gc-fine" id="h-${f}">${hints[f]}${play.edited.includes(f) ? " You have edited this." : ""}</p><textarea id="f-${f}" data-field="${f}" rows="${f === "title" ? 1 : 3}" maxlength="${f === "title" ? 120 : 400}" aria-describedby="h-${f}">${esc(play.scenario[f])}</textarea></div>`;
+      const field = (f) => `<div class="gc-fb"><div class="gc-fb-h"><label for="f-${f}">${names[f]}</label><span class="gc-aitag" data-tag="${f}"${ui.aiFields.has(f) && !play.edited.includes(f) ? "" : " hidden"}>Written with AI help</span><button type="button" class="gc-ghost gc-sm" data-act="regen" data-field="${f}" data-nav aria-label="Regenerate ${names[f].toLowerCase()}">Regenerate</button></div><p class="gc-fine" id="h-${f}">${hints[f]}${play.edited.includes(f) ? " You have edited this." : ""}</p><textarea id="f-${f}" data-field="${f}" rows="${f === "title" ? 1 : 3}" maxlength="${f === "title" ? 120 : 400}" aria-describedby="h-${f}">${esc(play.scenario[f])}</textarea></div>`;
       return `<div class="gc-scr">${hud("describe")}
         <h2 class="gc-title" tabindex="-1">Describe your future</h2>
         <p class="gc-sub">Written from your cards and your words. Type to change anything; Regenerate gives new wording for that part only. This is an imagined future, not a prediction.</p>
+        <p class="gc-aistatus" id="ai-status" role="status" aria-live="polite"></p>
         ${FIELDS.map(field).join("")}
+        ${ui.ai ? `<p class="gc-fine">${esc(AI_NOTE)}</p>` : ""}
         <div class="gc-tools"><button type="button" class="gc-ghost gc-sm" data-act="regen-all" data-nav>Regenerate all</button><button type="button" class="gc-ghost gc-sm" data-act="another" data-nav>Start another combination</button></div>
         <div class="gc-acts"><button type="button" class="gc-ghost" data-act="back" data-nav>Back</button><button type="button" class="gc-go" data-act="finish" data-nav data-primary>Finish and save</button></div>
       </div>`;
@@ -382,6 +386,7 @@ function init() {
     t0 = Date.now();
     ui.versions = [copySel(sel())]; ui.vcur = 0; ui.locked = {}; ui.clarity = 0; ui.groups = 1; ui.nudges = {};
     ui.gen = { title: 0, idea: 0, difference: 0 }; ui.draftKey = ""; ui.choose = null; ui.showDetails = false; ui.moreTools = false;
+    ui.aiFields = new Set(); ui.aiN = { title: 0, idea: 0, difference: 0, all: 0 }; ui.clearAI = ""; ui.clearN = 0; ui.aiBusy = false;
     persist();
     go("discover");
   }
@@ -431,17 +436,79 @@ function init() {
     play.nudges = Object.entries(ui.nudges).map(([i, a]) => ({ text: NUDGES[i], answer: a }));
     commit();
     go("describe");
+    if (ui.ai !== false) aiDraft();   // the game's own draft is on screen at once; AI wording replaces it if it arrives
   }
 
-  function regen(field) {
+  function ruleRegen(field) {
     ui.gen[field] += 1;
     play.scenario[field] = draftField(field, sel(), play.answers, ui.gen[field]);
     play.edited = play.edited.filter((f) => f !== field);
-    play.stats.regenerated += 1;
+    ui.aiFields.delete(field);
     persist();
     render();
     screen.querySelector(`#f-${field}`)?.focus();
     announce(`${field === "idea" ? "The idea" : field[0].toUpperCase() + field.slice(1)} rewritten.`);
+  }
+
+  // ------------------------------------------------------------------ AI wording help (Gemini, through /api/ai)
+  // Always optional: if it is off, slow or fails, the game's own wording is used and nothing is lost.
+  async function askAI(body) {
+    if (ui.ai === false) return null;
+    try {
+      const res = await fetch("/api/ai", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ picks: sel(), answers: play.answers, details: play.details, nudges: Object.entries(ui.nudges).map(([i, a]) => ({ text: NUDGES[i], answer: a })), ...body }) });
+      if (res.status === 503) { ui.ai = false; return null; }
+      if (!res.ok) return null;
+      play.stats.ai = (play.stats.ai || 0) + 1;
+      return await res.json();
+    } catch { return null; }
+  }
+  const AI_DOWN = "AI help is not available just now, so the game wrote this wording.";
+  const aiStatus = (msg) => { const el = screen.querySelector("#ai-status"); if (el) el.textContent = msg; };
+  const setBusy = (on) => { ui.aiBusy = on; screen.querySelector(".gc-scr")?.setAttribute("aria-busy", String(on)); screen.querySelectorAll('[data-act="regen"],[data-act="regen-all"],[data-act="clarify"]').forEach((b) => { b.disabled = on; }); };
+
+  async function clarify() {
+    play.stats.clarified += 1;
+    const key0 = JSON.stringify(sel());
+    if (ui.ai !== false && !ui.aiBusy) {
+      const btn = screen.querySelector('[data-act="clarify"]');
+      if (btn) btn.textContent = "Making it clearer…";
+      announce("Making it clearer.");
+      setBusy(true);
+      const out = await askAI({ task: "clarify", n: ui.clearN });
+      setBusy(false);
+      if (ui.step !== "assemble") return;
+      if (out?.sentence && JSON.stringify(sel()) === key0) {
+        ui.clearAI = out.sentence; ui.clearAIKey = key0; ui.clearN += 1; ui.clarity = Math.max(1, ui.clarity);
+        commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed."); return;
+      }
+    }
+    ui.clearAI = ""; ui.clarity = (ui.clarity % CLEAR_VARIANTS) + 1;
+    commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed.");
+  }
+
+  // Ask the AI for the scenario parts (all that you have not edited, or one). Returns true if it wrote them.
+  async function aiDraft({ field = null, user = false } = {}) {
+    if (ui.ai === false || ui.aiBusy) return false;
+    const fields = field ? [field] : FIELDS.filter((f) => !play.edited.includes(f));
+    if (!fields.length) return false;
+    setBusy(true); aiStatus("Writing with AI help…");
+    const keep = Object.fromEntries(FIELDS.filter((f) => !fields.includes(f)).map((f) => [f, play.scenario[f]]));
+    const out = await askAI({ task: "describe", field, keep, avoid: field ? play.scenario[field] : "", n: user ? ++ui.aiN[field || "all"] : 0 });
+    setBusy(false);
+    if (ui.step !== "describe") return false;
+    if (!out) { if (!user) aiStatus(""); return false; }
+    for (const f of fields) {
+      if (!out[f]) continue;
+      if (play.edited.includes(f) && f !== field) continue;   // you typed in it while it was being written: keep yours
+      play.scenario[f] = out[f]; play.edited = play.edited.filter((x) => x !== f); ui.aiFields.add(f);
+      const ta = screen.querySelector(`#f-${f}`); if (ta) ta.value = out[f];
+      const tag = screen.querySelector(`[data-tag="${f}"]`); if (tag) tag.hidden = false;
+      const hint = screen.querySelector(`#h-${f}`); if (hint) hint.textContent = hint.textContent.replace(" You have edited this.", "");
+    }
+    aiStatus("Written with AI help. Change anything you like.");
+    play.aiFields = [...ui.aiFields]; persist();
+    announce("The AI wrote new wording.");
+    return true;
   }
 
   function finish() {
@@ -548,8 +615,8 @@ function init() {
       render(); focusAfter(`.gc-lock[data-id="${d.id}"]`); announce(ui.locked[k] ? "Card locked." : "Card unlocked.");
     }
     else if (act === "random") { drawRandom(); render(); focusAfter('[data-act="random"]'); }
-    else if (act === "clarify") { if (guideToMissing()) return; ui.clarity = (ui.clarity % CLEAR_VARIANTS) + 1; play.stats.clarified += 1; commit(); render(); focusAfter('[data-act="unclarify"]'); announce("Clearer wording shown. Your cards have not changed."); }
-    else if (act === "unclarify") { ui.clarity = 0; commit(); render(); focusAfter('[data-act="clarify"]'); }
+    else if (act === "clarify") { if (guideToMissing()) return; clarify(); }
+    else if (act === "unclarify") { ui.clarity = 0; ui.clearAI = ""; commit(); render(); focusAfter('[data-act="clarify"]'); }
     else if (act === "version") { if (guideToMissing()) return; newVersionFrom(randomHand(sel(), ui.locked, Math.random, { fresh: true })); render(); focusAfter('[data-act="version"]'); announce(`Version ${ui.vcur + 1}. Your earlier version is kept.`); }
     else if (act === "ver-prev" || act === "ver-next") { ui.vcur += act === "ver-next" ? 1 : -1; play.picks = copySel(ui.versions[ui.vcur]); commit(); render(); focusAfter(`[data-act="${act}"]`); announce(`Version ${ui.vcur + 1} of ${ui.versions.length}.`); }
     else if (act === "more-tools") { ui.moreTools = !ui.moreTools; render(); focusAfter('[data-act="more-tools"]'); }
@@ -558,10 +625,14 @@ function init() {
     else if (act === "more") { ui.groups = Math.min(3, ui.groups + 1); render(); focusAfter(`.gc-group:nth-of-type(${ui.groups}) textarea`); }
     else if (act === "nudge") { const i = +d.i; if (i in ui.nudges) delete ui.nudges[i]; else ui.nudges[i] = ""; render(); focusAfter(i in ui.nudges ? `[data-nudge="${i}"]` : `[data-act="nudge"][data-i="${i}"]`); }
     else if (act === "create") toDescribe();
-    else if (act === "regen") regen(d.field);
+    else if (act === "regen") { play.stats.regenerated += 1; aiDraft({ field: d.field, user: true }).then((ok) => { if (!ok && ui.step === "describe") { ruleRegen(d.field); if (ui.ai !== false) aiStatus(AI_DOWN); } }); }
     else if (act === "regen-all") {
-      for (const f of FIELDS) if (!play.edited.includes(f)) { ui.gen[f] += 1; play.scenario[f] = draftField(f, sel(), play.answers, ui.gen[f]); }
-      play.stats.regenerated += 1; persist(); render(); announce("Rewritten. Parts you edited were kept.");
+      play.stats.regenerated += 1;
+      aiDraft({ user: true }).then((ok) => {
+        if (ok || ui.step !== "describe") return;
+        for (const f of FIELDS) if (!play.edited.includes(f)) { ui.gen[f] += 1; play.scenario[f] = draftField(f, sel(), play.answers, ui.gen[f]); ui.aiFields.delete(f); }
+        persist(); render(); if (ui.ai !== false) aiStatus(AI_DOWN); announce("Rewritten. Parts you edited were kept.");
+      });
     }
     else if (act === "another") another();
     else if (act === "again") another({ confirm: false });
@@ -638,6 +709,7 @@ function init() {
     else if (t.matches("textarea[data-field]")) {
       const f = t.dataset.field;
       play.scenario[f] = t.value;
+      ui.aiFields.delete(f); const tag = screen.querySelector(`[data-tag="${f}"]`); if (tag) tag.hidden = true;
       if (!play.edited.includes(f)) { play.edited.push(f); const h = screen.querySelector(`#h-${f}`); if (h && !h.textContent.includes("You have edited")) h.textContent += " You have edited this."; }
     }
     else if (t.name === "feedback") play.survey.feedback = t.value;
@@ -701,4 +773,5 @@ function init() {
 
   root.dataset.step = ui.step;
   render();
+  fetch("/api/ai").then((r) => (r.ok ? r.json() : null)).then((j) => { ui.ai = Boolean(j?.enabled); if (ui.ai) document.getElementById("ai-consent")?.removeAttribute("hidden"); }).catch(() => { ui.ai = false; });
 }

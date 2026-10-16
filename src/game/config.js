@@ -61,3 +61,6 @@ export const GENDERS = [
 
 export const CONSENT = "Your answers and these details are saved for research and can be read by the research team. Your name is optional. Please leave personal details out of what you write.";
 export const EMAIL_PURPOSE = "We will email you your scenario so you can keep it. If you agree, the research team also keeps your address. Leave it blank to skip.";
+
+// Shown only when the AI is switched on (see api/ai.js): players are told where their words go.
+export const AI_NOTE = "Some of the wording help comes from Google Gemini. To write it, your chosen cards and your answers are sent to Google. Please leave personal details out.";

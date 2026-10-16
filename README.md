@@ -48,6 +48,22 @@ optionally a group code. At the end they can ask for their report by email, with
 team keeps the address. Written answers are saved too. The wording is in `CONSENT` in `src/game/config.js`: have your ethics
 review confirm it (and the handling of players under 18) before collecting from real participants.
 
+### AI wording help (Gemini)
+
+`api/ai.js` can use Google Gemini to word the sentence ("Make clearer") and the scenario's title, idea and difference.
+The key stays on the server: the browser sends only card ids and the player's own words, the server builds the prompt,
+calls Gemini, and checks the answer (length, every chosen card still named, no empty parts). If the AI is off, slow,
+over its limits or fails a check, the game uses its own rule-based wording, so nothing breaks. AI text is labelled
+"Written with AI help" until the player edits it, and players are told where their words go (see `AI_NOTE` in `src/game/config.js`).
+
+Environment variables (Vercel project settings):
+
+- `GEMINI_API_KEY` required to switch it on (a Google AI Studio key; `GOOGLE_API_KEY` also works)
+- `GEMINI_MODEL` optional, default `gemini-3.8-flash`; set another model id if your account uses a different one
+- `AI_PER_IP_HOUR` (default 40) and `AI_DAILY_LIMIT` (default 1000) cap the use; counted in the database when it is connected
+
+Locally: `GEMINI_API_KEY=... npm run dev`.
+
 ### Emailing the report
 
 `api/report.js` builds the report on the server from the saved play and sends it through `api/_mail.js`, using whichever

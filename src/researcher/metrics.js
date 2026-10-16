@@ -112,6 +112,7 @@ export function computeMetrics(all) {
     answeredAny: share(fresh.filter((p) => answersOf(p) > 0).length, fresh.length),
     editedRate: share(fresh.filter((p) => p.edited.length > 0).length, fresh.length),
     regeneratedRate: share(fresh.filter((p) => p.stats.regenerated > 0).length, fresh.length),
+    aiRate: share(fresh.filter((p) => (p.stats.ai || 0) > 0).length, fresh.length),
     detailsRate: share(fresh.filter((p) => nonEmpty(p.details)).length, fresh.length),
     avgValues: mean(fresh.map((p) => p.picks.value.length)),
     avgPlaces: mean(fresh.map((p) => p.picks.places.length)),
@@ -155,13 +156,13 @@ const names = (p, key) => p.picks[key].map((id) => cardOf(SLOTS.find((s) => s.ke
 const ANSWER_COLS = GROUPS.flatMap((g) => g.qs.map((q, i) => ({ id: `${g.key}-${i + 1}`, q })));
 
 export function toCSV(plays) {
-  const head = ["id", "player", "name", "email", "age_band", "gender", "group", "status", "started_at", "completed_at", "device", "how_cards_were_chosen", "issue", "force", "values", "method", "places", "sentence", "title", "idea", "difference", "own_details", "draws", "swaps", "locks", "made_clearer", "versions", "regenerated", "edited_parts", "total_seconds", "discover_seconds", "assemble_seconds", "imagine_seconds", "describe_seconds", "ease_before_1to5", "helped_after_1to5", "feedback", ...ANSWER_COLS.map((a) => `answer_${a.id}`), "nudges"];
+  const head = ["id", "player", "name", "email", "age_band", "gender", "group", "status", "started_at", "completed_at", "device", "how_cards_were_chosen", "issue", "force", "values", "method", "places", "sentence", "title", "idea", "difference", "own_details", "draws", "swaps", "locks", "made_clearer", "versions", "regenerated", "ai_calls", "edited_parts", "total_seconds", "discover_seconds", "assemble_seconds", "imagine_seconds", "describe_seconds", "ease_before_1to5", "helped_after_1to5", "feedback", ...ANSWER_COLS.map((a) => `answer_${a.id}`), "nudges"];
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const sec = (ms) => (ms ? Math.round(ms / 100) / 10 : "");
   const rows = plays.map((p) => [
     p.id, p.pid, p.player?.name, p.player?.email, ageLabel(p.player?.age), genderLabel(p.player?.gender), p.group, p.status, p.startedAt, p.completedAt, p.device, p.stats.mode,
     names(p, "issue"), names(p, "forces"), names(p, "value"), names(p, "methods"), names(p, "places"), p.sentence, p.scenario?.title, p.scenario?.idea, p.scenario?.difference, p.details,
-    p.stats.draws, p.stats.swaps, p.stats.locks, p.stats.clarified, p.stats.versions, p.stats.regenerated, (p.edited || []).join("; "),
+    p.stats.draws, p.stats.swaps, p.stats.locks, p.stats.clarified, p.stats.versions, p.stats.regenerated, p.stats.ai ?? 0, (p.edited || []).join("; "),
     sec(p.durations?.total), sec(p.durations?.discover), sec(p.durations?.assemble), sec(p.durations?.imagine), sec(p.durations?.describe),
     p.survey?.pre, p.survey?.post, p.survey?.feedback, ...ANSWER_COLS.map((a) => p.answers?.[a.id] ?? ""), (p.nudges || []).map((n) => `${n.text}: ${n.answer}`).join(" | "),
   ].map(q).join(","));

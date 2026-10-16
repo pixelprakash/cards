@@ -65,7 +65,8 @@ function sanitiseV2(r, startedAt) {
     details: str(r.details, 800).trim(),
     scenario: { title: str(r.scenario?.title, 120), idea: str(r.scenario?.idea, 400), difference: str(r.scenario?.difference, 400) },
     edited: (Array.isArray(r.edited) ? r.edited : []).filter((f) => ["title", "idea", "difference"].includes(f)),
-    stats: { mode: ["random", "choose", "explore"].includes(st.mode) ? st.mode : "", draws: num(st.draws, 1000), swaps: num(st.swaps, 1000), locks: num(st.locks, 1000), clarified: num(st.clarified, 1000), versions: num(st.versions, 1000), regenerated: num(st.regenerated, 1000) },
+    stats: { mode: ["random", "choose", "explore"].includes(st.mode) ? st.mode : "", draws: num(st.draws, 1000), swaps: num(st.swaps, 1000), locks: num(st.locks, 1000), clarified: num(st.clarified, 1000), versions: num(st.versions, 1000), regenerated: num(st.regenerated, 1000), ai: num(st.ai, 1000) },
+    aiFields: (Array.isArray(r.aiFields) ? r.aiFields : []).filter((f) => ["title", "idea", "difference"].includes(f)),
     durations: durations(r.durations),
     device: DEVICES.has(r.device) ? r.device : "desktop",
   };

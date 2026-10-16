@@ -161,6 +161,7 @@ function render() {
     <div><dt>Questions answered per play</dt><dd>${num1(e.avgAnswers)}</dd></div>
     <div><dt>Edited the scenario</dt><dd>${pct(e.editedRate)}</dd></div>
     <div><dt>Regenerated a part</dt><dd>${pct(e.regeneratedRate)}</dd></div>
+    <div><dt>Got AI wording help</dt><dd>${pct(e.aiRate)}</dd></div>
   </dl>`, { hint: "Finished plays from the current version of the game." });
 
   const rate = (r) => `<div class="sub"><h3>${r.n ? `Average ${num1(r.mean)} of 5` : "No answers yet"}<small> (${r.n} ${r.n === 1 ? "answer" : "answers"})</small></h3><ul class="rows">${r.counts.map((c) => bar(`${c.rating}`, c.count, Math.max(...r.counts.map((x) => x.count), 1), { sub: `${c.count}` })).join("")}</ul></div>`;
