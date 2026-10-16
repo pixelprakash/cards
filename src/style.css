@@ -447,7 +447,7 @@ kbd { font: 700 0.75rem/1 var(--sans); padding: 0.18rem 0.42rem; border: 1px sol
 
 /* ---------- closing ---------- */
 .closing { background: var(--ink); color: #fff; padding: 4.5rem var(--gut) 0; }
-.site-foot { background: var(--ink); color: #fff; padding: 0 var(--gut) calc(2rem + var(--safe-b)); }
+.site-foot { display: flow-root; background: var(--ink); color: #fff; padding: 0 var(--gut) calc(2rem + var(--safe-b)); }   /* flow-root: the .foot margin stays inside the dark footer instead of leaking out as a white band */
 .closing-in { max-width: var(--max); margin-inline: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2rem; }
 .closing h2 { font: 700 clamp(2.9rem, 14vw, 10rem)/0.94 var(--display); font-stretch: 82%; letter-spacing: -0.03em; max-width: 13ch; }
 .closing h2 em { font-family: var(--serif); font-weight: 400; color: var(--y); }
