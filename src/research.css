@@ -1,6 +1,6 @@
 /* Research Background page: the hero, deck sheets and gallery built from the final card images, and the example hand. */
 
-.kicker { font: 700 0.78rem/1.3 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
+.kicker { font: 700 0.875rem/1.3 var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); }
 
 /* ---------- hero ---------- */
 .rhero {
@@ -37,10 +37,10 @@
 .decks .tab-code { border-color: var(--ac); }
 .decks .copy h2 { color: var(--ac); }
 .decks .copy p { color: #ece8de; }
-.count { display: inline-flex; align-items: baseline; gap: 0.5rem; font: 700 0.8rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ac); }
+.count { display: inline-flex; align-items: baseline; gap: 0.5rem; font: 700 0.875rem/1 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ac); }
 .count b { font: 800 clamp(2.2rem, 5vw, 3.4rem)/0.9 var(--display); letter-spacing: -0.03em; }
 .decks .copy p.count { color: var(--ac); }
-.sheet-link { display: inline-flex; align-items: center; gap: 0.5rem; min-height: var(--tap); padding: 0 1.2rem; border: 2px solid var(--ac); border-radius: 999px; color: var(--ac); font: 700 0.95rem/1 var(--sans); text-decoration: none; transition: background-color 0.2s, color 0.2s; }
+.sheet-link { display: inline-flex; align-items: center; gap: 0.5rem; min-height: var(--tap); padding: 0 1.2rem; border: 2px solid var(--ac); border-radius: 999px; color: var(--ac); font: 700 1.0rem/1 var(--sans); text-decoration: none; transition: background-color 0.2s, color 0.2s; }
 .sheet-link:hover { background: var(--ac); color: #15120e; }
 .sheet-link:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
@@ -68,7 +68,7 @@
 
 /* ---------- method: the example hand ---------- */
 .example { margin: 0; display: grid; gap: 1.1rem; padding: 1.4rem; border: 2px solid var(--ink); border-radius: 1.4rem; background: var(--paper); }
-.ex-cap { font: 700 0.78rem/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
+.ex-cap { font: 700 0.875rem/1.3 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
 .ex-cards { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
 .ex-cards li { width: clamp(3.4rem, 11vw, 5.4rem); }
 .ex-cards img { display: block; width: 100%; height: auto; aspect-ratio: 600 / 1050; border-radius: 0.4rem; box-shadow: 0 8px 12px -8px rgba(16, 14, 10, 0.55); }

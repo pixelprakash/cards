@@ -41,7 +41,7 @@ main:focus { outline: none; }
 .rbar-t span { font-weight: 500; opacity: 0.8; margin-left: 0.5rem; }
 
 /* sign-in */
-.out-btn { font: 700 0.9rem/1 var(--sans); min-height: 2.75rem; padding: 0 1rem; border-radius: 999px; border: 1.5px solid #fff; background: transparent; color: #fff; cursor: pointer; }
+.out-btn { font: 700 1.0rem/1 var(--sans); min-height: 2.75rem; padding: 0 1rem; border-radius: 999px; border: 1.5px solid #fff; background: transparent; color: #fff; cursor: pointer; }
 .out-btn:hover { background: #fff; color: var(--ink); }
 .out-btn:focus-visible { outline-color: #fff; }
 .out-btn[hidden], .gate[hidden], #app[hidden] { display: none; }
@@ -66,17 +66,17 @@ h1 { font: 800 clamp(1.9rem, 1.3rem + 2.6vw, 3.25rem)/1.05 var(--sans); letter-s
 /* tools */
 .tools { margin-top: 1rem; display: grid; gap: 0.9rem; padding: 1rem; background: #fff; border-radius: 1rem; border: 1.5px solid var(--line); }
 .filters { display: grid; gap: 0.75rem; }
-label { display: grid; gap: 0.3rem; font-size: 0.9rem; font-weight: 700; }
+label { display: grid; gap: 0.3rem; font-size: 1.0rem; font-weight: 700; }
 select, input[type="password"] { font: 500 1rem/1.2 var(--sans); min-height: 2.75rem; padding: 0.5rem 0.75rem; border: 1.5px solid var(--ink); border-radius: 0.6rem; background: #fff; color: var(--ink); width: 100%; }
 .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.btn { font: 700 0.95rem/1 var(--sans); min-height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; border: 1.5px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; }
+.btn { font: 700 1.0rem/1 var(--sans); min-height: 2.75rem; padding: 0 1.1rem; border-radius: 999px; border: 1.5px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; }
 .btn:hover { background: var(--blue); border-color: var(--blue); }
 .btn.ghost { background: #fff; color: var(--ink); }
 .btn.ghost:hover { background: var(--paper-2); border-color: var(--ink); }
 .btn.ghost[aria-pressed="true"] { background: var(--warn-bg); border-color: #8a6a00; }
 .shared summary { cursor: pointer; font-weight: 700; min-height: 2.75rem; display: flex; align-items: center; }
 .keyform { display: grid; gap: 0.7rem; max-width: 30rem; padding-bottom: 0.4rem; }
-.keyform p { font-size: 0.95rem; color: var(--ink-2); }
+.keyform p { font-size: 1.0rem; color: var(--ink-2); }
 .keyform .btn { justify-self: start; }
 .msg { min-height: 1.4em; font-weight: 600; color: var(--ink) !important; }
 
@@ -86,24 +86,24 @@ select, input[type="password"] { font: 500 1rem/1.2 var(--sans); min-height: 2.7
 .kpi { padding: 1rem 1.1rem; background: #fff; border-radius: 1rem; border: 1.5px solid var(--line); min-width: 0; }
 .kv { font: 800 clamp(1.5rem, 1.1rem + 2vw, 2.5rem)/1.05 var(--sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .kl { margin-top: 0.3rem; font-weight: 700; }
-.kn { margin-top: 0.15rem; font-size: 0.9rem; color: var(--ink-2); }
+.kn { margin-top: 0.15rem; font-size: 1.0rem; color: var(--ink-2); }
 
 .grid { margin-top: 0.75rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
 .panel { padding: 1.25rem 1.1rem 1.35rem; background: #fff; border-radius: 1rem; border: 1.5px solid var(--line); min-width: 0; }
 .panel h2 { font: 800 1.25rem/1.15 var(--sans); letter-spacing: -0.01em; }
-.panel h3 small { display: block; font-weight: 500; color: var(--ink-2); font-size: 0.82rem; line-height: 1.35; }
+.panel h3 small { display: block; font-weight: 500; color: var(--ink-2); font-size: 1.0rem; line-height: 1.35; }
 .panel h3.q { margin-bottom: 0.6rem; }
-.panel h3 { font: 700 0.95rem/1.2 var(--sans); margin-bottom: 0.5rem; }
-.hint { margin-top: 0.3rem; font-size: 0.9rem; color: var(--ink-2); }
+.panel h3 { font: 700 1.0rem/1.2 var(--sans); margin-bottom: 0.5rem; }
+.hint { margin-top: 0.3rem; font-size: 1.0rem; color: var(--ink-2); }
 .empty { color: var(--ink-2); margin-top: 0.75rem; }
 .empty.big { padding: 2rem 1rem; text-align: center; background: #fff; border-radius: 1rem; border: 1.5px dashed var(--line); font-size: 1.125rem; }
 
 /* bars */
 .rows { margin-top: 0.9rem; display: grid; gap: 0.55rem; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "lab val" "track track"; gap: 0.15rem 0.75rem; align-items: baseline; }
-.lab { grid-area: lab; font-weight: 600; font-size: 0.95rem; overflow-wrap: anywhere; }
+.lab { grid-area: lab; font-weight: 600; font-size: 1.0rem; overflow-wrap: anywhere; }
 .val { grid-area: val; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.val small { font-weight: 500; color: var(--ink-2); font-size: 0.85rem; }
+.val small { font-weight: 500; color: var(--ink-2); font-size: 1.0rem; }
 .track { grid-area: track; position: relative; height: 0.85rem; }
 .fill { display: block; border-radius: 0.2rem; }
 .fill.light { background: var(--blue-lt); border: 1.5px solid var(--blue); }
@@ -111,7 +111,7 @@ select, input[type="password"] { font: 500 1rem/1.2 var(--sans); min-height: 2.7
 .track .fill { position: absolute; left: 0; top: 0; height: 100%; min-width: 0; }
 .track .fill[style*="width:0%"] { border-width: 0; }
 
-.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin-top: 0.7rem; font-size: 0.875rem; font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin-top: 0.7rem; font-size: 1.0rem; font-weight: 600; }
 .legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
 .sw { width: 0.9rem; height: 0.9rem; border-radius: 0.2rem; display: inline-block; }
 .sw.light { background: var(--blue-lt); border: 1.5px solid var(--blue); }
@@ -130,12 +130,12 @@ select, input[type="password"] { font: 500 1rem/1.2 var(--sans); min-height: 2.7
 .stack .fill { position: absolute; left: 0; right: 0; bottom: 0; }
 .hist .col { height: auto; align-items: center; text-align: center; gap: 0.25rem; }
 .hist .stack { height: 7rem; width: 100%; }
-.hist .n { font-weight: 800; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
-.hist .bl { font-size: 0.7rem; line-height: 1.15; color: var(--ink-2); font-weight: 600; }
-.axis { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.4rem; font-size: 0.8rem; color: var(--ink-2); font-weight: 600; }
+.hist .n { font-weight: 800; font-size: 1.0rem; font-variant-numeric: tabular-nums; }
+.hist .bl { font-size: 1.0rem; line-height: 1.15; color: var(--ink-2); font-weight: 600; }
+.axis { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.4rem; font-size: 1.0rem; color: var(--ink-2); font-weight: 600; }
 .statline { margin-top: 0.7rem; font-size: 1.05rem; }
 .statline b { font: 800 1.75rem/1 var(--sans); }
-.statline span { color: var(--ink-2); font-size: 0.9rem; }
+.statline span { color: var(--ink-2); font-size: 1.0rem; }
 
 dl.mini { margin-top: 1rem; display: grid; gap: 0.5rem; }
 dl.mini div { display: flex; justify-content: space-between; gap: 1rem; padding-block: 0.4rem; border-top: 1px solid var(--line); }
@@ -145,15 +145,15 @@ dl.mini.big { margin-top: 0.8rem; }
 
 /* tables */
 .tv { margin-top: 0.7rem; }
-.tv summary { cursor: pointer; font-weight: 700; font-size: 0.9rem; min-height: 2.75rem; display: flex; align-items: center; }
+.tv summary { cursor: pointer; font-weight: 700; font-size: 1.0rem; min-height: 2.75rem; display: flex; align-items: center; }
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-.tv th, .tv td { text-align: left; padding: 0.35rem 0.5rem; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.tv th, .tv td { text-align: left; padding: 0.35rem 0.5rem; border-top: 1px solid var(--line); font-size: 1.0rem; }
 .axes { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.8rem; }
 .axes label { flex: 1 1 10rem; }
 .heat-wrap { margin-top: 0.9rem; overflow-x: auto; }
 .heat-wrap:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .heat { min-width: 28rem; table-layout: fixed; }
-.heat th, .heat td { padding: 0.55rem 0.5rem; border: 2px solid #fff; text-align: center; font-size: 0.9rem; }
+.heat th, .heat td { padding: 0.55rem 0.5rem; border: 2px solid #fff; text-align: center; font-size: 1.0rem; }
 .heat thead th { font-weight: 700; vertical-align: bottom; line-height: 1.15; }
 .heat tbody th { text-align: left; font-weight: 700; width: 28%; background: none; }
 .heat td { font-weight: 800; border-radius: 0.35rem; }
@@ -170,13 +170,13 @@ table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nu
 .resp li { border-top: 1px solid var(--line); padding-top: 0.4rem; }
 .resp summary { cursor: pointer; min-height: 2.75rem; display: grid; gap: 0.1rem; align-content: center; }
 .resp .hand { font-weight: 700; }
-.resp .meta { font-size: 0.85rem; color: var(--ink-2); }
+.resp .meta { font-size: 1.0rem; color: var(--ink-2); }
 .resp .pr, .qa { margin: 0.4rem 0 0.8rem; }
-.qa dt { font-weight: 700; font-size: 0.95rem; margin-top: 0.6rem; }
+.qa dt { font-weight: 700; font-size: 1.0rem; margin-top: 0.6rem; }
 .qa dd { margin-top: 0.1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pr { overflow-wrap: anywhere; }
 
-.rfoot { max-width: 84rem; margin: 0 auto; padding: 0 var(--gut) 3rem; color: var(--ink-2); font-size: 0.9rem; }
+.rfoot { max-width: 84rem; margin: 0 auto; padding: 0 var(--gut) 3rem; color: var(--ink-2); font-size: 1.0rem; }
 .rfoot p { max-width: 44rem; }
 
 @media (min-width: 40rem) {

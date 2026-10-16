@@ -28,6 +28,7 @@ function init() {
   let play = null;
   let t0 = Date.now();
 
+  const TITLES = { you: "About you", discover: "1 Discover", library: "1 Discover: the cards", assemble: "2 Assemble", imagine: "3 Imagine", describe: "4 Describe", finish: "Thank you" };
   const sel = () => play.picks;
   const key = (deck, id) => `${deck}:${id}`;
 
@@ -51,6 +52,7 @@ function init() {
     ui.step = step;
     ui.stepAt = Date.now();
     root.dataset.step = step;
+    document.title = `${TITLES[step] ?? "Play"} | Play the game | Pedagogy Playcards`;
     if (play && !["you", "finish"].includes(step)) play.status = step === "library" ? "discover" : step;
     render();
     screen.scrollTop = 0;
@@ -69,10 +71,11 @@ function init() {
   // ------------------------------------------------------------------ card building blocks
   // A card tile: the image (sharper on big screens) with the card's name written underneath, so it can always be read.
   const SIZES = "(min-width: 62rem) 11rem, (min-width: 40rem) 9rem, 30vw";
-  const cardImg = (c) => `<img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="${SIZES}" alt="" width="300" height="525" loading="lazy" decoding="async">`;
+  // the first eight cards of a deck load straight away; the rest load as you scroll
+  const cardImg = (c, i = 0) => `<img src="${c.sm}" srcset="${c.sm} 300w, ${c.img} 600w" sizes="${SIZES}" alt="" width="300" height="525"${i >= 8 ? ' loading="lazy"' : ""} decoding="async">`;
   const tile = (deck, c, extra = "") => {
     const inSel = sel()[SLOT_BY_DECK[deck].key].includes(c.id);
-    return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}>${cardImg(c)}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
+    return `<button type="button" class="gc-tile${inSel ? " is-in" : ""}" data-act="open-card" data-deck="${deck}" data-id="${c.id}" data-nav aria-label="${esc(c.name)}, ${esc(DECKS[deck].noun)}${inSel ? ", in your combination" : ""}"${extra}>${cardImg(c, cardsOf(deck).indexOf(c))}<span class="gc-cap" aria-hidden="true">${esc(c.name)}</span>${inSel ? '<span class="gc-tick" aria-hidden="true">&#10003;</span>' : ""}</button>`;
   };
 
   // What the sentence still needs, in reading order (Issue and Method of learning are required).
@@ -220,7 +223,7 @@ function init() {
         <div class="gc-fields">
           <label class="gc-field"><span>Your name <i>(optional)</i></span><input name="name" maxlength="40" autocomplete="name" value="${esc(pr.name)}"></label>
           <label class="gc-field"><span>Your age</span><select name="age" aria-describedby="you-err" required><option value="">Choose one</option>${AGE_BANDS.map((a) => `<option value="${a.id}"${pr.age === a.id ? " selected" : ""}>${a.label}</option>`).join("")}</select></label>
-          <fieldset class="gc-field gc-radios"><legend>Your gender</legend>
+          <fieldset class="gc-field gc-radios" aria-describedby="you-err"><legend>Your gender</legend>
             ${GENDERS.map((g) => `<label class="gc-radio"><input type="radio" name="gender" value="${g.id}"${pr.gender === g.id ? " checked" : ""}><span>${g.label}</span></label>`).join("")}
           </fieldset>
           ${scale("pre", ui.pre, "Very difficult", "Very easy")}
@@ -607,9 +610,13 @@ function init() {
     if (f.classList.contains("gc-survey")) return;
     const v = { name: f.name.value, age: f.age.value, gender: f.gender.value };
     const err = screen.querySelector("#you-err");
+    f.age.removeAttribute("aria-invalid");
+    f.querySelector(".gc-radios").removeAttribute("aria-invalid");
     if (!v.age || !v.gender) {
       const what = !v.age && !v.gender ? "your age and your gender" : !v.age ? "your age" : "your gender";
       err.textContent = `Please choose ${what} (you can choose “Prefer not to say”).`;
+      if (!v.age) f.age.setAttribute("aria-invalid", "true");
+      if (!v.gender) f.querySelector(".gc-radios").setAttribute("aria-invalid", "true");
       (!v.age ? f.age : f.querySelector('[name="gender"]')).focus();
       return;
     }

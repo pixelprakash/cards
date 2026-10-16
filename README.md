@@ -89,6 +89,18 @@ The game and the Research Background page use the designer's final card faces (s
 - **Box photos** are in `public/img` as WebP at 640, 1100, 1600 and 2200 px, with a JPG fallback.
 - `public/og.jpg` is the 1200×630 link-preview image.
 
+## Accessibility
+
+Built and checked against WCAG 2.2 AA. What is covered and how it was checked:
+
+- **Automated:** axe-core (wcag2a, wcag2aa, wcag21a, wcag21aa, wcag22aa, best-practice) on every screen of the game, the home page, the research page and the dashboard.
+- **Reading size:** uppercase labels are never below 14px; all other interface text is at least 16px; reading text is 17 to 22px.
+- **Contrast:** every text and control colour pair is at least 4.5:1 (checked by calculation, including the deck colours).
+- **Zoom and reflow:** no sideways scrolling at 320px wide (400% zoom); the text-spacing override (line height 1.5, letter spacing 0.12em, word spacing 0.16em) clips nothing.
+- **Keyboard:** everything works without a mouse; Esc goes back; every control has a visible focus style; focused controls are kept clear of the sticky Back/Continue bar; the card chooser traps focus while open and returns it afterwards.
+- **Screen readers:** one live region announces choices and errors; the page title follows the step; errors are tied to their fields.
+- **Motion:** nothing moves forever; all animation stops under "reduce motion".
+
 ## Content
 
 All copy follows the project's source documents (the Pedagogy Playcards PDF, the research-assessment article, and the
