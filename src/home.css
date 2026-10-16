@@ -41,8 +41,10 @@ main:focus { outline: none; }
 .skip:focus { translate: 0 0; outline: 3px solid var(--y); outline-offset: 2px; }
 
 .top { padding: 1rem var(--gut) 0; }
-.brand { display: inline-flex; align-items: center; gap: 0.65rem; min-height: 2.9rem; font: 800 1.05rem/1 var(--sans); text-decoration: none; letter-spacing: -0.01em; }
-.brand svg { width: 1.5rem; height: 1.5rem; fill: var(--ink); }
+.brand { display: inline-flex; align-items: center; gap: 0.7rem; min-height: 3rem; padding: 0 1.4rem 0 1.15rem; border-radius: 999px; background: #1d1b17; color: #fff; font: 800 1.0625rem/1 var(--sans); text-decoration: none; letter-spacing: -0.01em; box-shadow: 0 0 0 1px rgba(255,255,255,.14), 0 14px 32px -16px rgba(16,14,10,.55); }
+.brand svg { width: 20px; height: 20px; fill: currentColor; }
+.brand:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+@media (min-width: 62rem) { .top { padding-top: 1rem; } .brand { min-height: 3.5rem; padding: 0 1.5rem 0 1.25rem; } }
 
 main { flex: 1; display: grid; align-items: center; overflow-x: clip; padding: clamp(1.25rem, 4vw, 3rem) var(--gut) clamp(2rem, 5vw, 4rem); }
 .intro { max-width: 1400px; margin-inline: auto; width: 100%; display: grid; gap: 2.2rem; align-items: center; }
