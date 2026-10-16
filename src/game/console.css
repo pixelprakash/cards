@@ -558,3 +558,20 @@ fieldset[aria-invalid="true"] { outline-offset: 6px; border-radius: 0.6rem; }
 .gc-trk-t i { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .gc-trk { align-items: flex-start; padding-block: 0.5rem; }
 .gc-trk-mark { margin-top: 0.15rem; }
+
+
+/* ===== Questions and answers: bigger, bolder, easy to scan ===== */
+.gc-q { gap: 0.55rem; }
+.gc-qt { font: 650 clamp(1.25rem, 1.1rem + 0.5vw, 1.45rem)/1.35 var(--sans); letter-spacing: -0.005em; color: var(--ink); max-width: 46rem; }
+.gc-q textarea, .gc-fb textarea, .gc-field textarea, .gc-survey textarea { font: 400 1.25rem/1.5 var(--serif); min-height: 4.5rem; padding: 0.75rem 1rem; color: var(--ink); }
+.gc-fb textarea[rows="1"] { min-height: 3.4rem; }
+.gc-q textarea::placeholder, .gc-fb textarea::placeholder, .gc-field textarea::placeholder, .gc-survey textarea::placeholder { color: #5c574b; opacity: 1; font-style: italic; }
+.gc-group { gap: 1.4rem; }
+.gc-group legend { font-size: 1rem; letter-spacing: 0.12em; margin-bottom: 0.7rem; color: var(--ink); }
+.gc-recap { font: 400 1.25rem/1.5 var(--serif); }
+.gc-scale legend { font: 650 1.2rem/1.4 var(--sans); }
+.gc-scale-ends { font-size: 0.95rem; }
+.gc-fb-h label { font-size: 1.05rem; }
+.gc-fb .gc-fine { font-size: 1rem; }
+.gc-field > span { font: 650 1.05rem/1.3 var(--sans); color: var(--ink); }
+.gc-field > span i { font-weight: 500; color: var(--ink-2); }
