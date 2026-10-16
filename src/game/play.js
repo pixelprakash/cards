@@ -116,7 +116,7 @@ function init() {
     const full = !on && slot.max > 1 && chosen.length >= slot.max;
     const swapLocked = !on && slot.max === 1 && chosen[0] && ui.locked[key(deck, chosen[0])];
     const note = swapLocked ? "The card in this gap is locked. Unlock it to choose another." : full ? `You already have ${slot.max}. Remove one to add this.` : on && locked ? "This card is locked. Unlock it to remove it." : "";
-    const label = on ? "Remove this card" : slot.max === 1 && chosen.length ? "Use this card instead" : "Choose this card";
+    const label = on ? "Remove this card" : slot.max === 1 ? (chosen.length ? "Use this card instead" : "Choose this card") : full ? `You have ${slot.max} already` : `Add this card (${chosen.length + 1} of ${slot.max})`;
     return `<div class="gc-ch-card"><img src="${c.img}" alt="" width="600" height="1050" decoding="async"></div>
       <div class="gc-ch-text">
         <p class="gc-kicker">${esc(DECKS[deck].noun)} &middot; ${idx + 1} of ${cards.length}</p>
@@ -126,16 +126,27 @@ function init() {
         ${on ? `<button type="button" class="gc-keep" data-act="ch-keep" data-nav aria-pressed="${locked}">${locked ? "Kept when you shuffle" : "Keep this card when I shuffle"}</button>` : ""}
         <div class="gc-ch-nav">
           <button type="button" class="gc-ch-step" data-act="ch-prev" data-nav aria-label="Previous card">&larr;</button>
-          <button type="button" class="gc-go gc-ch-choose" data-act="ch-choose" data-nav data-primary${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
+          <button type="button" class="gc-go gc-ch-choose" data-act="ch-choose" data-nav${slot.max > 1 ? "" : " data-primary"}${swapLocked || full || (on && locked) ? " disabled" : ""}>${label}</button>
           <button type="button" class="gc-ch-step" data-act="ch-next" data-nav aria-label="Next card">&rarr;</button>
         </div>
+        ${slot.max > 1 ? `<button type="button" class="gc-go gc-ch-done" data-act="ch-done" data-nav data-primary>Done${chosen.length ? ` &middot; ${chosen.length} chosen` : ""}</button>` : ""}
       </div>`;
   }
   function chooserHTML() {
-    const { deck, idx } = ui.choose, slot = SLOT_BY_DECK[deck], chosen = chosenIn(deck);
-    const list = cardsOf(deck).map((x, i) => `<li><button type="button" class="gc-ch-item${chosen.includes(x.id) ? " is-on" : ""}" data-act="ch-go" data-idx="${i}" data-nav${i === idx ? ' aria-current="true"' : ""}><span class="gc-ch-name">${esc(x.name)}</span>${chosen.includes(x.id) ? '<span class="gc-ch-tick" aria-hidden="true">&#10003;</span><span class="vh"> (chosen)</span>' : ""}</button></li>`).join("");
+    const { deck, idx } = ui.choose, slot = SLOT_BY_DECK[deck], chosen = chosenIn(deck), multi = slot.max > 1;
+    const full = multi && chosen.length >= slot.max;
+    const list = cardsOf(deck).map((x, i) => {
+      const on = chosen.includes(x.id);
+      const cur = i === idx ? ' aria-current="true"' : "";
+      if (!multi) return `<li><button type="button" class="gc-ch-item${on ? " is-on" : ""}" data-act="ch-go" data-idx="${i}" data-nav${cur}><span class="gc-ch-name">${esc(x.name)}</span>${on ? '<span class="gc-ch-tick" aria-hidden="true">&#10003;</span><span class="vh"> (chosen)</span>' : ""}</button></li>`;
+      const blocked = full && !on;
+      return `<li><button type="button" class="gc-ch-item gc-ch-multi${on ? " is-on" : ""}${blocked ? " is-blocked" : ""}" data-act="ch-toggle" data-idx="${i}" data-nav aria-pressed="${on}"${blocked ? ' aria-disabled="true"' : ""}${cur}><span class="gc-ch-box" aria-hidden="true">${on ? "&#10003;" : ""}</span><span class="gc-ch-name">${esc(x.name)}</span></button></li>`;
+    }).join("");
+    const picks = multi ? `<div class="gc-picksrow" aria-label="Your picks"><span class="gc-picks-l">Your picks</span>${chosen.length ? chosen.map((id) => `<span class="gc-pick-chip"><span>${esc(cardOf(deck, id).name)}</span><button type="button" data-act="ch-rm" data-id="${id}" data-nav aria-label="Remove ${esc(cardOf(deck, id).name)}">&times;</button></span>`).join("") : `<span class="gc-picks-none">None yet. Tap the cards below to add them.</span>`}</div>` : "";
+    const hint = multi ? (full ? `You have ${slot.max} of ${slot.max}. Tap a pick to remove it.` : "Tap a card to add it. Tap it again to remove it.") : "Tap a name to read the card, then choose it.";
     return `<div class="gc-ch" role="dialog" aria-modal="true" aria-labelledby="ch-h" data-deck="${deck}">
-      <header class="gc-ch-top"><div><p class="gc-kicker">${esc(DECKS[deck].name)}</p><h2 id="ch-h" class="gc-ch-h" tabindex="-1">${esc(slot.ask)}</h2><p class="gc-ch-status" data-status>${esc(statusText())}</p></div><button type="button" class="gc-go gc-sm" data-act="ch-done" data-nav>Done</button></header>
+      <header class="gc-ch-top"><div><p class="gc-kicker">${esc(DECKS[deck].name)}</p><h2 id="ch-h" class="gc-ch-h" tabindex="-1">${esc(slot.ask)}</h2><p class="gc-ch-status" data-status>${esc(statusText())}</p><p class="gc-ch-hint">${esc(hint)}</p></div><button type="button" class="gc-go gc-sm${multi ? " gc-ch-donetop" : ""}" data-act="ch-done" data-nav>Done</button></header>
+      ${picks}
       <div class="gc-ch-body"><ul class="gc-ch-list" aria-label="${esc(DECKS[deck].name)}">${list}</ul><div class="gc-ch-detail" data-detail>${detailHTML()}</div></div>
     </div>`;
   }
@@ -512,6 +523,15 @@ function init() {
     }
     else if (act === "slot") { const slot = SLOTS.find((x) => x.key === d.slot); const first = sel()[slot.key][0]; openChooser(slot.deck, first ? cardsOf(slot.deck).findIndex((x) => x.id === first) : 0, `[data-act="slot"][data-slot="${slot.key}"]`); }
     else if (act === "ch-go") { paintDetail(+d.idx); }
+    else if (act === "ch-toggle") {
+      const { deck } = ui.choose, slot = SLOT_BY_DECK[deck], c = cardsOf(deck)[+d.idx], list = chosenIn(deck);
+      ui.choose.idx = +d.idx;
+      if (list.includes(c.id)) { if (ui.locked[key(deck, c.id)]) { announce(`${c.name} is kept. Open it to unkeep it first.`); } else { removeCard(deck, c.id); announce(`${c.name} removed.`); } }
+      else if (list.length >= slot.max) announce(`You already have ${slot.max}. Tap one of your picks to remove it first.`);
+      else { addCard(deck, c.id); announce(`${c.name} added. ${slot.max - chosenIn(deck).length} left.`); ui.choseNow = true; }
+      repaintChooser(`.gc-ch-item[data-idx="${d.idx}"]`);
+    }
+    else if (act === "ch-rm") { const { deck } = ui.choose; const c = cardOf(deck, d.id); if (ui.locked[key(deck, d.id)]) delete ui.locked[key(deck, d.id)]; removeCard(deck, d.id); announce(`${c.name} removed.`); repaintChooser(".gc-ch-item[aria-current]"); }
     else if (act === "ch-prev" || act === "ch-next") { const n = cardsOf(ui.choose.deck).length; paintDetail((ui.choose.idx + (act === "ch-next" ? 1 : -1) + n) % n); overlay.querySelector(`[data-act="${act}"]`)?.focus({ preventScroll: true }); overlay.querySelector('.gc-ch-item[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" }); }
     else if (act === "ch-keep") { const { deck, idx } = ui.choose; const k = key(deck, cardsOf(deck)[idx].id); if (ui.locked[k]) delete ui.locked[k]; else { ui.locked[k] = true; play.stats.locks += 1; } paintDetail(idx); overlay.querySelector('[data-act="ch-keep"]')?.focus({ preventScroll: true }); announce(ui.locked[k] ? "This card will stay when you shuffle." : "This card can change when you shuffle."); }
     else if (act === "ch-choose") chooseCurrent();

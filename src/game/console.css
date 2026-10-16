@@ -500,3 +500,28 @@
 .gc-decklist b { font: 700 0.95rem/1.2 var(--sans); }
 .gc-decklist i { font: 400 0.95rem/1.35 var(--serif); font-style: normal; color: var(--ink-2); }
 @media (min-width: 40rem) and (orientation: landscape), (min-width: 62rem) { .gc-disc { grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 2.4rem; } .gc-decklist li { gap: 1rem; } .gc-decklist img { width: 3.2rem; } }
+
+
+/* ===== multi-card chooser (values, places): tick boxes, "Your picks", a counter and Done next to the action ===== */
+.gc-ch-hint { margin: 0.2rem 0 0; font: 500 0.9rem/1.3 var(--sans); color: var(--ink-2); }
+.gc-picksrow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; padding: 0.55rem 0.7rem; border-radius: 0.9rem; background: #f3f1ea; }
+.gc-picks-l { font: 800 0.72rem/1 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); margin-right: 0.3rem; }
+.gc-picks-none { font: 500 0.92rem/1.3 var(--sans); color: var(--ink-2); }
+.gc-pick-chip { display: inline-flex; align-items: center; gap: 0.1rem; padding: 0 0.1rem 0 0.85rem; min-height: 2.5rem; border-radius: 999px; background: var(--c, var(--ink)); color: var(--ci, #fff); font: 700 0.9rem/1 var(--sans); }
+.gc-pick-chip button { all: unset; box-sizing: border-box; display: grid; place-items: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; cursor: pointer; font-size: 1.25rem; line-height: 1; }
+.gc-pick-chip button:hover { background: rgba(0, 0, 0, 0.14); }
+.gc-pick-chip button:focus-visible { outline: 3px solid currentColor; outline-offset: -2px; }
+.gc-ch-multi { justify-content: flex-start; gap: 0.7rem; }
+.gc-ch-box { flex: none; display: grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 0.4rem; border: 2px solid var(--ink); background: #fff; font-size: 0.95rem; line-height: 1; }
+.gc-ch-multi.is-on { background: color-mix(in srgb, var(--c, #ddd) 55%, #fff); border-color: var(--ink); }
+.gc-ch-multi.is-on .gc-ch-box { background: var(--ink); color: #fff; }
+.gc-ch-multi.is-blocked { opacity: 0.5; cursor: not-allowed; }
+.gc-ch-multi[aria-current="true"] { background: var(--c, var(--ink)); color: var(--ci, #fff); }
+.gc-ch-multi[aria-current="true"].is-on .gc-ch-box { background: var(--ink); }
+.gc-ch-done { align-self: flex-start; min-height: 3rem; padding: 0 1.8rem; }
+@media (max-width: 39.99rem) { .gc-ch-done { align-self: stretch; } .gc-picksrow { padding: 0.45rem 0.55rem; } }
+
+/* phones: Done lives in the header (always visible); wide screens: Done sits beside the action */
+@media (max-width: 39.99rem), (max-height: 520px) { .gc-ch-done { display: none; } }
+@media (min-width: 40rem) and (min-height: 521px) { .gc-ch-donetop { display: none; } }
+@media (max-width: 39.99rem) { .gc-ch-hint { display: none; } .gc-ch-status { margin-top: 0.2rem; } }
